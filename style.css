@@ -51,14 +51,29 @@ body {
 }
 .calendar-grid div {
   text-align: center;
-  padding: 10px;
-  margin: 2px;
+  margin: 6px;
   border-radius: 8px;
   transition: 0.2s;
 }
+
+.cell {
+  aspect-ratio: 1 / 1;       /* 정사각형 만들기 핵심 */
+  border: 1px solid #ccc;
+  text-align: center;
+  line-height: 1.2;
+  display: inline-grid;
+}
+
 .calendar-grid div.highlight {
   background-color: #f87171;
   color: white;
+}
+
+.multi-day {
+  background-color: #b1cfff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 4px;
 }
 
 .calendar-grid div.today {
