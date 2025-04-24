@@ -113,34 +113,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     icsEvents.forEach(event => {
-      const start = toKSTDate(event.start, event.isAllDay);
-      const end = toKSTDate(event.end || event.start, event.isAllDay);
+  const start = toKSTDate(event.start, event.isAllDay);
+  const end = toKSTDate(event.end || event.start, event.isAllDay);
 
-      if ((start.getMonth() === month || end.getMonth() === month) && start.getFullYear() === year) {
-        let current = new Date(start);
-        while (current <= end) {
-          if (current.getMonth() === month && current.getFullYear() === year) {
-            const index = firstDayIndex + current.getDate() - 1;
-            const cell = calendarGrid.children[index];
-            if (!cell) break;
+  if ((start.getMonth() === month || end.getMonth() === month) && start.getFullYear() === year) {
+    let current = new Date(start);
+    while (current <= end) {
+      if (current.getMonth() === month && current.getFullYear() === year) {
+        const index = firstDayIndex + current.getDate() - 1;
+        const cell = calendarGrid.children[index];
+        if (!cell) break;
 
-            const isStart = current.toDateString() === start.toDateString();
-            const isEnd = current.toDateString() === end.toDateString();
+        const isStart = current.toDateString() === start.toDateString();
+        const isEnd = current.toDateString() === end.toDateString();
 
-            if (isStart && isEnd) {
-              cell.classList.add("range-single");
-            } else if (isStart) {
-              cell.classList.add("range-start");
-            } else if (isEnd) {
-              cell.classList.add("range-end");
-            } else {
-              cell.classList.add("range-middle");
-            }
-          }
-          current.setDate(current.getDate() + 1);
+        // ✅ 둘 다 true면 단일 일정 (range-single)
+        if (isStart && isEnd) {
+          cell.classList.add("range-single", "range-start", "range-end");
+        } else if (isStart) {
+          cell.classList.add("range-start");
+        } else if (isEnd) {
+          cell.classList.add("range-end");
+        } else {
+          cell.classList.add("range-middle");
         }
       }
-    });
+      current.setDate(current.getDate() + 1);
+    }
+  }
+});
+
 
     renderAppointments(icsEvents, year, month);
   }
