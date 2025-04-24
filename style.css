@@ -133,21 +133,30 @@ body {
 }
 
 
-.range-single {
+
+/* ✅ 단일 일정 전용 스타일 (단독일 경우에만 적용) */
+.calendar-cell.range-single:not(.range-start):not(.range-middle):not(.range-end) {
   background-color: #b1cfff6e;
   border-radius: 50%;
+  font-weight: 400;
+  color: #000;
 }
 
-/* 시작 날짜: 왼쪽 둥글게 */
-.range-start,
-.range-middle,
-.range-end {
-color: #1c34d5;
-font-weight: 700
-}
-
-
-/* 시작+종료가 같은 날짜인 경우 (range-single과 함께 적용될 경우 우선순위 부여) */
-.range-end.range-single {
+/* ✅ 단일 + 연속 일정이 겹칠 경우 스타일 */
+.calendar-cell.range-single.range-start,
+.calendar-cell.range-single.range-middle,
+.calendar-cell.range-single.range-end {
+  background-color: #b1cfff6e;
+  color: #1c34d5;
+  font-weight: 700;
   border-radius: 50%;
+}
+
+/* ✅ 연속 일정 전용 스타일 */
+.calendar-cell.range-start,
+.calendar-cell.range-middle,
+.calendar-cell.range-end {
+  color: #1c34d5;
+  font-weight: 700;
+  border: none;
 }
