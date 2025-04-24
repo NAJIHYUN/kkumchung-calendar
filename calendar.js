@@ -115,38 +115,40 @@ document.addEventListener("DOMContentLoaded", () => {
     // ✅ 일정 색칠
     icsEvents.forEach(event => {
       const start = toKSTDate(event.start, event.isAllDay);
-      const end = toKSTDate(event.end || event.start, event.isAllDay);
+      let end = toKSTDate(event.end || event.start, event.isAllDay);
 
-      if ((start.getMonth() === month || end.getMonth() === month) && start.getFullYear() === year) {
-        let current = new Date(start);
+      if (event.isAllDay && start.toDateString() !== end.toDateString()) {
+        end.setDate(end.getDate() - 1); // 구글 캘린더 보정
+      }
 
-        while (current <= end) {
-          if (current.getMonth() === month && current.getFullYear() === year) {
-            const index = firstDayIndex + current.getDate() - 1;
-            const cell = calendarGrid.children[index];
-            if (!cell) break;
+      let current = new Date(start);
 
-            const isStart = current.toDateString() === start.toDateString();
-            const isEnd = current.toDateString() === end.toDateString();
+      while (current <= end) {
+        if (current.getMonth() === month && current.getFullYear() === year) {
+          const index = firstDayIndex + current.getDate() - 1;
+          const cell = calendarGrid.children[index];
+          if (!cell) break;
 
-            if (isStart && isEnd) {
-              cell.classList.add("range-single", "range-start", "range-end");
-            } else if (isStart) {
-              const nextDay = new Date(current);
-              nextDay.setDate(current.getDate() + 1);
-              if (nextDay > end) {
-                cell.classList.add("range-single");
-              } else {
-                cell.classList.add("range-start");
-              }
-            } else if (isEnd) {
-              cell.classList.add("range-end");
+          const isStart = current.toDateString() === start.toDateString();
+          const isEnd = current.toDateString() === end.toDateString();
+
+          if (isStart && isEnd) {
+            cell.classList.add("range-single", "range-start", "range-end");
+          } else if (isStart) {
+            const nextDay = new Date(current);
+            nextDay.setDate(current.getDate() + 1);
+            if (nextDay > end) {
+              cell.classList.add("range-single");
             } else {
-              cell.classList.add("range-middle");
+              cell.classList.add("range-start");
             }
+          } else if (isEnd) {
+            cell.classList.add("range-end");
+          } else {
+            cell.classList.add("range-middle");
           }
-          current.setDate(current.getDate() + 1);
         }
+        current.setDate(current.getDate() + 1);
       }
     });
 
@@ -160,7 +162,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     events.forEach(e => {
       const start = toKSTDate(e.start, e.isAllDay);
-      const end = toKSTDate(e.end || e.start, e.isAllDay);
+      let end = toKSTDate(e.end || e.start, e.isAllDay);
+
+      if (e.isAllDay && start.toDateString() !== end.toDateString()) {
+        end.setDate(end.getDate() - 1); // 보정
+      }
 
       if ((start.getMonth() !== month && end.getMonth() !== month) || start.getFullYear() !== year) return;
 
