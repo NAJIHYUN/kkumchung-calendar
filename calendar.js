@@ -142,46 +142,62 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderAppointments(events, year, month) {
   const daysKor = ['일', '월', '화', '수', '목', '금', '토'];
+  const appointmentList = document.getElementById("appointment-list");
   const grouped = [];
 
-  const addedSet = new Set(); // 중복 방지용
+  const addedSet = new Set(); // 중복 방지
 
   events.forEach(e => {
     const start = toKSTDate(e.start, e.isAllDay);
     const end = toKSTDate(e.end || e.start, e.isAllDay);
 
     // 이달 일정만 표시
-    if (
-      start.getMonth() !== month && end.getMonth() !== month
-    ) return;
+    if (start.getMonth() !== month && end.getMonth() !== month) return;
 
-    const key = `${start.toISOString()}__${e.summary}`;
-    if (addedSet.has(key)) return;
-    addedSet.add(key);
+    const isAllDay = e.isAllDay || !e.start.includes("T");
 
-    const startLabel = `${start.getDate()}일 (${daysKor[start.getDay()]})`;
-    const endLabel = `${end.getDate()}일 (${daysKor[end.getDay()]})`;
-    const dateRange = (start.toDateString() === end.toDateString())
-      ? startLabel
-      : `${startLabel} ~ ${endLabel}`;
+    if (isAllDay && start.toDateString() !== end.toDateString()) {
+      // 연속 종일 일정
+      const key = `${start.toISOString()}__${e.summary}`;
+      if (addedSet.has(key)) return;
+      addedSet.add(key);
 
-    grouped.push({
-      label: dateRange,
-      summary: e.summary
-    });
+      const startLabel = `${start.getDate()}일 (${daysKor[start.getDay()]})`;
+      const endLabel = `${end.getDate()}일 (${daysKor[end.getDay()]})`;
+      grouped.push({
+        label: `${startLabel} ~ ${endLabel}`,
+        lines: [e.summary],
+      });
+    } else {
+      // 단일 일정 (종일 or 시간 있음)
+      const label = `${start.getDate()}일 (${daysKor[start.getDay()]})`;
+      const time = isAllDay ? "" : `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')} - `;
+      const existing = grouped.find(g => g.label === label);
+      if (existing) {
+        existing.lines.push(`${time}${e.summary}`);
+      } else {
+        grouped.push({
+          label,
+          lines: [`${time}${e.summary}`],
+        });
+      }
+    }
   });
 
+  // 렌더링
   appointmentList.innerHTML = "";
-  grouped.sort((a, b) => a.label.localeCompare(b.label)).forEach(e => {
+  grouped.sort((a, b) => a.label.localeCompare(b.label)).forEach(item => {
     const header = document.createElement("li");
-    header.textContent = e.label;
+    header.textContent = item.label;
     header.style.fontWeight = "bold";
     header.style.marginTop = "10px";
     appointmentList.appendChild(header);
 
-    const li = document.createElement("li");
-    li.textContent = e.summary;
-    appointmentList.appendChild(li);
+    item.lines.forEach(text => {
+      const li = document.createElement("li");
+      li.textContent = text;
+      appointmentList.appendChild(li);
+    });
   });
 }
 
