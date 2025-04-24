@@ -69,6 +69,7 @@ body {
 .calendar-grid div.today {
   background-color: #4caf50;
   color: white;
+  border-radius: 40px;
 }
 
 .appointment-section {
