@@ -178,10 +178,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (existing) {
           existing.lines.push(`${time}${e.summary}`);
         } else {
-          grouped.push({
-            label,
-            lines: [`${time}${e.summary}`],
-          });
+grouped.push({
+  label,
+  lines: [`${time}${e.summary}`],
+  date: new Date(year, month, Number(label.split("일")[0]) || 1) // 🔥 여기에 추가!
+});
         }
       }
     });
