@@ -68,13 +68,14 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
     const raw = icsDateStr.replace("Z", "");
-    return new Date(
+    const utcDate = new Date(
       raw.substring(0, 4) + "-" +
       raw.substring(4, 6) + "-" +
       raw.substring(6, 8) + "T" +
       raw.substring(9, 11) + ":" +
       raw.substring(11, 13)
     );
+    return new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
   }
 
   function renderCalendar(date) {
@@ -111,17 +112,14 @@ document.addEventListener("DOMContentLoaded", () => {
       calendarGrid.appendChild(cell);
     }
 
-    // 연속 일정 색칠
     icsEvents.forEach(event => {
       const start = toKSTDate(event.start, event.isAllDay);
       const end = toKSTDate(event.end || event.start, event.isAllDay);
 
-      if (
-        start.getMonth() === month || end.getMonth() === month
-      ) {
+      if ((start.getMonth() === month || end.getMonth() === month) && start.getFullYear() === year) {
         let current = new Date(start);
         while (current <= end) {
-          if (current.getMonth() === month) {
+          if (current.getMonth() === month && current.getFullYear() === year) {
             const index = firstDayIndex + current.getDate() - 1;
             const cell = calendarGrid.children[index];
             if (!cell) break;
@@ -156,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const start = toKSTDate(e.start, e.isAllDay);
       const end = toKSTDate(e.end || e.start, e.isAllDay);
 
-      if (start.getMonth() !== month && end.getMonth() !== month) return;
+      if ((start.getMonth() !== month && end.getMonth() !== month) || start.getFullYear() !== year) return;
 
       const isAllDay = e.isAllDay || !e.start.includes("T");
 
