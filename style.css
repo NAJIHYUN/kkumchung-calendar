@@ -131,52 +131,31 @@ body {
     font-size: 1em;
   }
 }
-
-/* 기본 배경 */
-.range-start,
-.range-middle,
-.range-end {
-  background-color: #ffe9888c;
-  border: none;
-}
-
-/* 범위 시작일 모양 (좌 둥근) */
+/* 시작일은 왼쪽 모서리 둥글게 */
 .range-start {
-  border-radius: 40px 0 0 40px;
+  border-radius: 40px 0 0 40px !important;
 }
 
-/* 범위 중간일 */
-.range-middle {
-  border-radius: 0;
-}
-
-/* 범위 종료일 모양 (우 둥근) */
+/* 종료일은 오른쪽 모서리 둥글게 */
 .range-end {
-  border-radius: 0 40px 40px 0;
+  border-radius: 0 40px 40px 0 !important;
 }
 
-/* 단일 일정 스타일 */
+/* 단일 일정에만 동그란 파란 테두리 */
 .range-single {
+  background-color: #fff7cc;
+  position: relative;
+}
+
+/* 단일 일정용 테두리 */
+.range-single::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
   border: 2px solid navy;
-  background: transparent;
-  border-radius: 12px;
-}
-
-/* 겹치는 경우 - range-single + 범위들 조합 */
-.range-start.range-single,
-.range-middle.range-single,
-.range-end.range-single {
-  background-color: #ffe9888c;        /* 배경 유지 */
-  border: 2px solid navy;             /* 테두리 덮어쓰기 */
-}
-
-/* 각 조합에 따라 border-radius도 정리 */
-.range-start.range-single {
-  border-radius: 40px 0 0 40px;
-}
-.range-middle.range-single {
-  border-radius: 0;
-}
-.range-end.range-single {
-  border-radius: 0 40px 40px 0;
+  border-radius: 50%;
+  pointer-events: none;
 }
