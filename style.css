@@ -61,15 +61,8 @@ body {
 }
 
 .calendar-grid div.highlight {
-  background-color: #f87171;
-  color: white;
-}
-
-.multi-day {
   background-color: #b1cfff;
-  padding: 6px 10px;
-  border-radius: 6px;
-  margin-bottom: 4px;
+  color: #010739;
 }
 
 .calendar-grid div.today {
