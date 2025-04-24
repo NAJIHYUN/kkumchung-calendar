@@ -126,25 +126,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const isStart = current.toDateString() === start.toDateString();
         const isEnd = current.toDateString() === end.toDateString();
-
-        // ✅ 둘 다 true면 단일 일정 (range-single)
-        // 이 부분만 수정
 if (isStart && isEnd) {
+  // 시작과 끝이 같은 날짜인 단일 일정
   cell.classList.add("range-single", "range-start", "range-end");
-} else if (isStart && !isEnd && end > start) {
-  // 🟡 start만 있고 middle, end가 없으면 → 단일로 간주
-  const nextDay = new Date(current);
-  nextDay.setDate(current.getDate() + 1);
-  if (nextDay > end) {
-    cell.classList.add("range-single");
-  } else {
-    cell.classList.add("range-start");
-  }
+} else if (isStart && end.toDateString() === start.toDateString()) {
+  // 시작만 있고 끝이 동일한 경우 (start만 감지된 경우 포함)
+  cell.classList.add("range-single");
+} else if (isStart) {
+  // 시작일이면서 연속일정
+  cell.classList.add("range-start");
 } else if (isEnd) {
   cell.classList.add("range-end");
 } else {
   cell.classList.add("range-middle");
 }
+
 
       }
       current.setDate(current.getDate() + 1);
