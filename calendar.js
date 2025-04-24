@@ -165,3 +165,8 @@ const today = new Date(); // ✅ 수정
     renderCalendar(currentDate);
   });
 });
+
+document.getElementById("plus-btn")?.addEventListener("click", () => {
+  window.open("http://pf.kakao.com/_xckXiG/chat", "_blank");
+});
+
