@@ -56,14 +56,16 @@ body {
   border-radius: 8px;
   transition: 0.2s;
 }
-.calendar-grid div.today {
-  background-color: #4caf50;
-  color: white;
-}
 .calendar-grid div.highlight {
   background-color: #f87171;
   color: white;
 }
+
+.calendar-grid div.today {
+  background-color: #4caf50;
+  color: white;
+}
+
 .appointment-section {
   padding: 20px;
   border-top: 1px solid #eee;
