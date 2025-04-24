@@ -76,6 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderCalendar(date) {
     const year = date.getFullYear();
     const month = date.getMonth();
+    monthLabel.textContent = `${year}년 ${month + 1}월`;
     const today = new Date();
 
     const startOfMonth = new Date(year, month, 1);
