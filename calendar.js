@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", () => {
   const monthLabel = document.getElementById("month-label");
   const calendarGrid = document.getElementById("calendar-grid");
@@ -81,8 +80,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderCalendar(date) {
     const year = date.getFullYear();
     const month = date.getMonth();
-    monthLabel.textContent = `${year}년 ${month + 1}월`;
     const today = new Date();
+
+    monthLabel.textContent = `${year}년 ${month + 1}월`;
 
     const startOfMonth = new Date(year, month, 1);
     const endOfMonth = new Date(year, month + 1, 0);
@@ -112,111 +112,106 @@ document.addEventListener("DOMContentLoaded", () => {
       calendarGrid.appendChild(cell);
     }
 
+    // ✅ 일정 색칠
     icsEvents.forEach(event => {
-  const start = toKSTDate(event.start, event.isAllDay);
-  const end = toKSTDate(event.end || event.start, event.isAllDay);
+      const start = toKSTDate(event.start, event.isAllDay);
+      const end = toKSTDate(event.end || event.start, event.isAllDay);
 
-  if ((start.getMonth() === month || end.getMonth() === month) && start.getFullYear() === year) {
-    let current = new Date(start);
-    while (current <= end) {
-      if (current.getMonth() === month && current.getFullYear() === year) {
-        const index = firstDayIndex + current.getDate() - 1;
-        const cell = calendarGrid.children[index];
-        if (!cell) break;
+      if ((start.getMonth() === month || end.getMonth() === month) && start.getFullYear() === year) {
+        let current = new Date(start);
 
-        const isStart = current.toDateString() === start.toDateString();
-        const isEnd = current.toDateString() === end.toDateString();
-if (isStart && isEnd) {
-  // 시작과 끝이 같은 날짜인 단일 일정
-  cell.classList.add("range-single", "range-start", "range-end");
-} else if (isStart && end.toDateString() === start.toDateString()) {
-  // 시작만 있고 끝이 동일한 경우 (start만 감지된 경우 포함)
-  cell.classList.add("range-single");
-} else if (isStart) {
-  // 시작일이면서 연속일정
-  cell.classList.add("range-start");
-} else if (isEnd) {
-  cell.classList.add("range-end");
-} else {
-  cell.classList.add("range-middle");
-}
+        while (current <= end) {
+          if (current.getMonth() === month && current.getFullYear() === year) {
+            const index = firstDayIndex + current.getDate() - 1;
+            const cell = calendarGrid.children[index];
+            if (!cell) break;
 
+            const isStart = current.toDateString() === start.toDateString();
+            const isEnd = current.toDateString() === end.toDateString();
 
+            if (isStart && isEnd) {
+              cell.classList.add("range-single", "range-start", "range-end");
+            } else if (isStart) {
+              const nextDay = new Date(current);
+              nextDay.setDate(current.getDate() + 1);
+              if (nextDay > end) {
+                cell.classList.add("range-single");
+              } else {
+                cell.classList.add("range-start");
+              }
+            } else if (isEnd) {
+              cell.classList.add("range-end");
+            } else {
+              cell.classList.add("range-middle");
+            }
+          }
+          current.setDate(current.getDate() + 1);
+        }
       }
-      current.setDate(current.getDate() + 1);
-    }
-  }
-});
-
+    });
 
     renderAppointments(icsEvents, year, month);
   }
 
   function renderAppointments(events, year, month) {
-  const daysKor = ['일', '월', '화', '수', '목', '금', '토'];
-  const grouped = [];
-  const addedSet = new Set();
+    const daysKor = ['일', '월', '화', '수', '목', '금', '토'];
+    const grouped = [];
+    const addedSet = new Set();
 
-  events.forEach(e => {
-    const start = toKSTDate(e.start, e.isAllDay);
-    const end = toKSTDate(e.end || e.start, e.isAllDay);
+    events.forEach(e => {
+      const start = toKSTDate(e.start, e.isAllDay);
+      const end = toKSTDate(e.end || e.start, e.isAllDay);
 
-    if ((start.getMonth() !== month && end.getMonth() !== month) || start.getFullYear() !== year) return;
+      if ((start.getMonth() !== month && end.getMonth() !== month) || start.getFullYear() !== year) return;
 
-    const isAllDay = e.isAllDay || !e.start.includes("T");
+      const isAllDay = e.isAllDay || !e.start.includes("T");
 
-    // ✅ 연속 종일 일정은 key 기준 중복 제거
-    if (isAllDay && start.toDateString() !== end.toDateString()) {
-      const key = `${e.summary}__${start.getFullYear()}-${start.getMonth() + 1}`;
-      if (addedSet.has(key)) return;
-      addedSet.add(key);
+      if (isAllDay && start.toDateString() !== end.toDateString()) {
+        const key = `${e.summary}__${start.toISOString().slice(0, 10)}`;
+        if (addedSet.has(key)) return;
+        addedSet.add(key);
 
-      const startLabel = `${start.getDate()}일 (${daysKor[start.getDay()]})`;
-      const endLabel = `${end.getDate()}일 (${daysKor[end.getDay()]})`;
+        const startLabel = `${start.getDate()}일 (${daysKor[start.getDay()]})`;
+        const endLabel = `${end.getDate()}일 (${daysKor[end.getDay()]})`;
 
-      grouped.push({
-        label: `${startLabel} ~ ${endLabel}`,
-        lines: [e.summary],
-        date: start // ✅ 가장 앞 날짜 기준으로 정렬에 사용
-      });
-
-    } else {
-      const label = `${start.getDate()}일 (${daysKor[start.getDay()]})`;
-      const time = isAllDay ? "" : `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')} - `;
-
-      const existing = grouped.find(g => g.label === label);
-      if (existing) {
-        existing.lines.push(`${time}${e.summary}`);
-      } else {
         grouped.push({
-          label,
-          lines: [`${time}${e.summary}`],
-          date: new Date(year, month, start.getDate())
+          label: `${startLabel} ~ ${endLabel}`,
+          lines: [e.summary],
+          date: start
         });
+      } else {
+        const label = `${start.getDate()}일 (${daysKor[start.getDay()]})`;
+        const time = isAllDay ? "" : `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')} - `;
+        const existing = grouped.find(g => g.label === label);
+        if (existing) {
+          existing.lines.push(`${time}${e.summary}`);
+        } else {
+          grouped.push({
+            label,
+            lines: [`${time}${e.summary}`],
+            date: start
+          });
+        }
       }
-    }
-  });
-
-  // ✅ 날짜 기준 정렬
-  grouped.sort((a, b) => (a.date || 0) - (b.date || 0));
-
-  // 렌더링
-  appointmentList.innerHTML = "";
-  grouped.forEach(item => {
-    const header = document.createElement("li");
-    header.textContent = item.label;
-    header.style.fontWeight = "bold";
-    header.style.marginTop = "10px";
-    appointmentList.appendChild(header);
-
-    item.lines.forEach(text => {
-      const li = document.createElement("li");
-      li.textContent = text;
-      appointmentList.appendChild(li);
     });
-  });
-}
 
+    grouped.sort((a, b) => (a.date?.getTime() || 0) - (b.date?.getTime() || 0));
+
+    appointmentList.innerHTML = "";
+    grouped.forEach(item => {
+      const header = document.createElement("li");
+      header.textContent = item.label;
+      header.style.fontWeight = "bold";
+      header.style.marginTop = "10px";
+      appointmentList.appendChild(header);
+
+      item.lines.forEach(text => {
+        const li = document.createElement("li");
+        li.textContent = text;
+        appointmentList.appendChild(li);
+      });
+    });
+  }
 
   prevBtn.addEventListener("click", () => {
     currentDate.setMonth(currentDate.getMonth() - 1);
