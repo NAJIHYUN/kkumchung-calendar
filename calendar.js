@@ -71,8 +71,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const year = date.getFullYear();
     const month = date.getMonth();
 
-    const todayUTC = new Date();
-    const today = new Date(todayUTC.getTime() + 9 * 60 * 60 * 1000);
+// const todayUTC = new Date();
+// const today = new Date(todayUTC.getTime() + 9 * 60 * 60 * 1000);
+const today = new Date(); // ✅ 수정
+
 
     const startOfMonth = new Date(year, month, 1);
     const endOfMonth = new Date(year, month + 1, 0);
