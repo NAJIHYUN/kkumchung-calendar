@@ -132,17 +132,51 @@ body {
   }
 }
 
-.range-start {
-  background-color: #d7e6ff;
-  border-radius: 40px 0px 0px 40px !important;
-}
-
-.range-middle {
-  background-color:#d7e6ff;
-  border-radius: 0 !important;
-}
-
+/* 기본 배경 */
+.range-start,
+.range-middle,
 .range-end {
-  background-color: #d7e6ff;
-  border-radius: 0px 40px 40px 0px !important;
+  background-color: #ffe9888c;
+  border: none;
+}
+
+/* 범위 시작일 모양 (좌 둥근) */
+.range-start {
+  border-radius: 40px 0 0 40px;
+}
+
+/* 범위 중간일 */
+.range-middle {
+  border-radius: 0;
+}
+
+/* 범위 종료일 모양 (우 둥근) */
+.range-end {
+  border-radius: 0 40px 40px 0;
+}
+
+/* 단일 일정 스타일 */
+.range-single {
+  border: 2px solid navy;
+  background: transparent;
+  border-radius: 12px;
+}
+
+/* 겹치는 경우 - range-single + 범위들 조합 */
+.range-start.range-single,
+.range-middle.range-single,
+.range-end.range-single {
+  background-color: #ffe9888c;        /* 배경 유지 */
+  border: 2px solid navy;             /* 테두리 덮어쓰기 */
+}
+
+/* 각 조합에 따라 border-radius도 정리 */
+.range-start.range-single {
+  border-radius: 40px 0 0 40px;
+}
+.range-middle.range-single {
+  border-radius: 0;
+}
+.range-end.range-single {
+  border-radius: 0 40px 40px 0;
 }
