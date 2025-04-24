@@ -16,7 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(data => {
       console.log("✅ ICS 데이터 (원본 일부):", data.slice(0, 300));
       icsEvents = parseICS(data);
-      console.log("✅ 파싱된 일정 전체:", icsEvents);
       renderCalendar(currentDate);
     })
     .catch(err => {
@@ -40,11 +39,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (line.startsWith("SUMMARY:")) {
           event.summary = line.replace("SUMMARY:", "");
         } else if (line.startsWith("DTSTART")) {
-          const match = line.match(/DTSTART[^:]*:(.+)/);
-          if (match) event.start = match[1];
+          const raw = line.substring(line.indexOf(":") + 1);
+          event.start = raw;
+          event.isAllDay = !raw.includes("T");
         } else if (line.startsWith("DTEND")) {
-          const match = line.match(/DTEND[^:]*:(.+)/);
-          if (match) event.end = match[1];
+          const raw = line.substring(line.indexOf(":") + 1);
+          event.end = raw;
         } else if (line.startsWith("DESCRIPTION:")) {
           event.description = line.replace("DESCRIPTION:", "");
         }
@@ -54,90 +54,116 @@ document.addEventListener("DOMContentLoaded", () => {
     return events;
   }
 
-  function toKSTDate(icsDateStr) {
+  function toKSTDate(icsDateStr, isAllDay = false) {
     if (!icsDateStr) return new Date();
-    if (!icsDateStr.includes("T")) return new Date(icsDateStr); // 종일 일정
-
-    try {
-      const normalized = icsDateStr.replace(/Z$/, "");
-      const dt = new Date(normalized.substring(0,4) + "-" + normalized.substring(4,6) + "-" + normalized.substring(6,8) + "T" + normalized.substring(9,11) + ":" + normalized.substring(11,13));
-      return new Date(dt.getTime() + 9 * 60 * 60 * 1000); // KST 변환
-    } catch {
-      return new Date(); // fallback
+    if (!icsDateStr.includes("T") || isAllDay) {
+      return new Date(
+        icsDateStr.substring(0, 4) + "-" +
+        icsDateStr.substring(4, 6) + "-" +
+        icsDateStr.substring(6, 8)
+      );
     }
+    const raw = icsDateStr.replace("Z", "");
+    return new Date(
+      raw.substring(0, 4) + "-" +
+      raw.substring(4, 6) + "-" +
+      raw.substring(6, 8) + "T" +
+      raw.substring(9, 11) + ":" +
+      raw.substring(11, 13)
+    );
   }
 
   function renderCalendar(date) {
     const year = date.getFullYear();
     const month = date.getMonth();
-
-// const todayUTC = new Date();
-// const today = new Date(todayUTC.getTime() + 9 * 60 * 60 * 1000);
-const today = new Date(); // ✅ 수정
-
+    const today = new Date();
 
     const startOfMonth = new Date(year, month, 1);
     const endOfMonth = new Date(year, month + 1, 0);
     const firstDayIndex = startOfMonth.getDay();
     const daysInMonth = endOfMonth.getDate();
 
-    const eventsThisMonth = icsEvents.filter(e => {
-      const dt = toKSTDate(e.start);
-      return dt.getFullYear() === year && dt.getMonth() === month;
-    });
-
-    const highlightDates = eventsThisMonth.map(e => {
-      const dt = toKSTDate(e.start);
-      return dt.getDate();
-    });
-
-    monthLabel.textContent = `${year}년 ${month + 1}월`;
     calendarGrid.innerHTML = "";
 
     for (let i = 0; i < firstDayIndex; i++) {
-      calendarGrid.innerHTML += "<div></div>";
+      calendarGrid.appendChild(document.createElement("div"));
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const thisDay = new Date(year, month, day);
-      const div = document.createElement("div");
-      div.textContent = day;
+      const dateObj = new Date(year, month, day);
+      const cell = document.createElement("div");
+      cell.classList.add("calendar-cell");
+      cell.textContent = day;
 
       if (
-        thisDay.getFullYear() === today.getFullYear() &&
-        thisDay.getMonth() === today.getMonth() &&
-        thisDay.getDate() === today.getDate()
+        dateObj.getFullYear() === today.getFullYear() &&
+        dateObj.getMonth() === today.getMonth() &&
+        dateObj.getDate() === today.getDate()
       ) {
-        div.classList.add("today");
+        cell.classList.add("today");
       }
 
-      if (highlightDates.includes(day)) {
-        div.classList.add("highlight");
-      }
-
-      calendarGrid.appendChild(div);
+      calendarGrid.appendChild(cell);
     }
 
-    renderAppointments(eventsThisMonth);
+    // 연속 일정 색칠
+    icsEvents.forEach(event => {
+      const start = toKSTDate(event.start, event.isAllDay);
+      const end = toKSTDate(event.end || event.start, event.isAllDay);
+
+      if (
+        start.getMonth() === month || end.getMonth() === month
+      ) {
+        let current = new Date(start);
+        while (current <= end) {
+          if (current.getMonth() === month) {
+            const index = firstDayIndex + current.getDate() - 1;
+            const cell = calendarGrid.children[index];
+            if (!cell) break;
+
+            const isStart = current.toDateString() === start.toDateString();
+            const isEnd = current.toDateString() === end.toDateString();
+
+            if (isStart && isEnd) {
+              cell.classList.add("range-single");
+            } else if (isStart) {
+              cell.classList.add("range-start");
+            } else if (isEnd) {
+              cell.classList.add("range-end");
+            } else {
+              cell.classList.add("range-middle");
+            }
+          }
+          current.setDate(current.getDate() + 1);
+        }
+      }
+    });
+
+    renderAppointments(icsEvents, year, month);
   }
 
-  function renderAppointments(events) {
+  function renderAppointments(events, year, month) {
     const daysKor = ['일', '월', '화', '수', '목', '금', '토'];
     const grouped = {};
 
     events.forEach(e => {
-      const dt = toKSTDate(e.start);
-      console.log("📆", dt, e.summary); // 디버깅 로그
+      const start = toKSTDate(e.start, e.isAllDay);
+      const end = toKSTDate(e.end || e.start, e.isAllDay);
 
-      const label = `${String(dt.getDate()).padStart(2, '0')}일 (${daysKor[dt.getDay()]})`;
-      if (!grouped[label]) grouped[label] = [];
+      let current = new Date(start);
+      while (current <= end) {
+        if (current.getFullYear() === year && current.getMonth() === month) {
+          const label = `${String(current.getDate()).padStart(2, '0')}일 (${daysKor[current.getDay()]})`;
+          if (!grouped[label]) grouped[label] = [];
 
-      const time = e.start.includes("T")
-        ? `${dt.getHours().toString().padStart(2, '0')}:${dt.getMinutes().toString().padStart(2, '0')}`
-        : "종일";
+          let status = "진행 중";
+          if (current.toDateString() === start.toDateString()) status = "시작";
+          else if (current.toDateString() === end.toDateString()) status = "종료";
 
-      grouped[label].push(`${time} - ${e.summary}`);
-      console.log("📋 일정 추가됨:", time, "-", e.summary); // 디버깅 로그
+          grouped[label].push(`${status} - ${e.summary}`);
+        }
+        current.setDate(current.getDate() + 1);
+      }
     });
 
     appointmentList.innerHTML = "";
@@ -150,6 +176,7 @@ const today = new Date(); // ✅ 수정
       grouped[day].forEach(e => {
         const li = document.createElement("li");
         li.textContent = e;
+        li.classList.add("multi-day");
         appointmentList.appendChild(li);
       });
     });
@@ -164,8 +191,8 @@ const today = new Date(); // ✅ 수정
     currentDate.setMonth(currentDate.getMonth() + 1);
     renderCalendar(currentDate);
   });
-});
 
-document.getElementById("plus-btn")?.addEventListener("click", () => {
-  window.open("http://pf.kakao.com/_xckXiG/chat", "_blank");
+  document.querySelector(".plus-btn")?.addEventListener("click", () => {
+    window.open("http://pf.kakao.com/_xckXiG/chat", "_blank");
+  });
 });
