@@ -1,3 +1,4 @@
+
 document.addEventListener("DOMContentLoaded", () => {
   const monthLabel = document.getElementById("month-label");
   const calendarGrid = document.getElementById("calendar-grid");
@@ -15,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(data => {
       console.log("✅ ICS 데이터 (원본 일부):", data.slice(0, 300));
       icsEvents = parseICS(data);
+      console.log("✅ 파싱된 일정 전체:", icsEvents);
       renderCalendar(currentDate);
     })
     .catch(err => {
@@ -38,10 +40,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (line.startsWith("SUMMARY:")) {
           event.summary = line.replace("SUMMARY:", "");
         } else if (line.startsWith("DTSTART")) {
-          const match = line.match(/DTSTART.*:(.+)/);
+          const match = line.match(/DTSTART[^:]*:(.+)/);
           if (match) event.start = match[1];
         } else if (line.startsWith("DTEND")) {
-          const match = line.match(/DTEND.*:(.+)/);
+          const match = line.match(/DTEND[^:]*:(.+)/);
           if (match) event.end = match[1];
         } else if (line.startsWith("DESCRIPTION:")) {
           event.description = line.replace("DESCRIPTION:", "");
@@ -53,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function toKSTDate(icsDateStr) {
-    if (!icsDateStr || !icsDateStr.includes("T")) return new Date(icsDateStr); // 종일 일정 또는 형식 오류
+    if (!icsDateStr || !icsDateStr.includes("T")) return new Date(icsDateStr);
     const utc = new Date(icsDateStr);
     return new Date(utc.getTime() + 9 * 60 * 60 * 1000);
   }
@@ -63,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const month = date.getMonth();
 
     const todayUTC = new Date();
-    const today = new Date(todayUTC.getTime() + 9 * 60 * 60 * 1000); // 한국 기준 오늘
+    const today = new Date(todayUTC.getTime() + 9 * 60 * 60 * 1000);
 
     const startOfMonth = new Date(year, month, 1);
     const endOfMonth = new Date(year, month + 1, 0);
