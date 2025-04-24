@@ -51,17 +51,13 @@ body {
 }
 .calendar-grid div {
   text-align: center;
+  aspect-ratio: 1 / 1; 
   margin: 6px;
   border-radius: 8px;
   transition: 0.2s;
-}
-
-.cell {
-  aspect-ratio: 1 / 1;       /* 정사각형 만들기 핵심 */
-  border: 1px solid #ccc;
-  text-align: center;
-  line-height: 1.2;
-  display: inline-grid;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .calendar-grid div.highlight {
