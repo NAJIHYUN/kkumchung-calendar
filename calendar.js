@@ -55,9 +55,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function toKSTDate(icsDateStr) {
-    if (!icsDateStr || !icsDateStr.includes("T")) return new Date(icsDateStr);
-    const utc = new Date(icsDateStr);
-    return new Date(utc.getTime() + 9 * 60 * 60 * 1000);
+    if (!icsDateStr) return new Date();
+    if (!icsDateStr.includes("T")) return new Date(icsDateStr); // 종일 일정
+
+    try {
+      const normalized = icsDateStr.replace(/Z$/, "");
+      const dt = new Date(normalized.substring(0,4) + "-" + normalized.substring(4,6) + "-" + normalized.substring(6,8) + "T" + normalized.substring(9,11) + ":" + normalized.substring(11,13));
+      return new Date(dt.getTime() + 9 * 60 * 60 * 1000); // KST 변환
+    } catch {
+      return new Date(); // fallback
+    }
   }
 
   function renderCalendar(date) {
@@ -118,6 +125,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     events.forEach(e => {
       const dt = toKSTDate(e.start);
+      console.log("📆", dt, e.summary); // 디버깅 로그
+
       const label = `${String(dt.getDate()).padStart(2, '0')}일 (${daysKor[dt.getDay()]})`;
       if (!grouped[label]) grouped[label] = [];
 
@@ -126,6 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
         : "종일";
 
       grouped[label].push(`${time} - ${e.summary}`);
+      console.log("📋 일정 추가됨:", time, "-", e.summary); // 디버깅 로그
     });
 
     appointmentList.innerHTML = "";
