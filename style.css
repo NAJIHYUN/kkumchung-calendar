@@ -91,6 +91,7 @@ body {
   color: white;
   font-size: 0.9em;
   width: auto;
+  display: block;
   height: auto;
   border-radius: 10px;
   text-align: center;
