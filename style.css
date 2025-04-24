@@ -55,6 +55,7 @@ body {
   line-height: 1.1;
   margin: 6px;
   border-radius: 34px;
+  min-width: 0;
   transition: 0.2s;
   display: flex;
   justify-content: center;
