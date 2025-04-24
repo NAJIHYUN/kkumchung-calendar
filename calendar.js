@@ -140,48 +140,51 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    renderAppointments(icsEvents, year, month);
-  }
+    function renderAppointments(events, year, month) {
+  const daysKor = ['일', '월', '화', '수', '목', '금', '토'];
+  const grouped = [];
 
-  function renderAppointments(events, year, month) {
-    const daysKor = ['일', '월', '화', '수', '목', '금', '토'];
-    const grouped = {};
+  const addedSet = new Set(); // 중복 방지용
 
-    events.forEach(e => {
-      const start = toKSTDate(e.start, e.isAllDay);
-      const end = toKSTDate(e.end || e.start, e.isAllDay);
+  events.forEach(e => {
+    const start = toKSTDate(e.start, e.isAllDay);
+    const end = toKSTDate(e.end || e.start, e.isAllDay);
 
-      let current = new Date(start);
-      while (current <= end) {
-        if (current.getFullYear() === year && current.getMonth() === month) {
-          const label = `${String(current.getDate()).padStart(2, '0')}일 (${daysKor[current.getDay()]})`;
-          if (!grouped[label]) grouped[label] = [];
+    // 이달 일정만 표시
+    if (
+      start.getMonth() !== month && end.getMonth() !== month
+    ) return;
 
-          let status = "진행 중";
-          if (current.toDateString() === start.toDateString()) status = "시작";
-          else if (current.toDateString() === end.toDateString()) status = "종료";
+    const key = `${start.toISOString()}__${e.summary}`;
+    if (addedSet.has(key)) return;
+    addedSet.add(key);
 
-          grouped[label].push(`${status} - ${e.summary}`);
-        }
-        current.setDate(current.getDate() + 1);
-      }
+    const startLabel = `${start.getDate()}일 (${daysKor[start.getDay()]})`;
+    const endLabel = `${end.getDate()}일 (${daysKor[end.getDay()]})`;
+    const dateRange = (start.toDateString() === end.toDateString())
+      ? startLabel
+      : `${startLabel} ~ ${endLabel}`;
+
+    grouped.push({
+      label: dateRange,
+      summary: e.summary
     });
+  });
 
-    appointmentList.innerHTML = "";
-    Object.keys(grouped).sort().forEach(day => {
-      const header = document.createElement("li");
-      header.textContent = day;
-      header.style.fontWeight = "bold";
-      header.style.marginTop = "10px";
-      appointmentList.appendChild(header);
-      grouped[day].forEach(e => {
-        const li = document.createElement("li");
-        li.textContent = e;
-        li.classList.add("multi-day");
-        appointmentList.appendChild(li);
-      });
-    });
-  }
+  appointmentList.innerHTML = "";
+  grouped.sort((a, b) => a.label.localeCompare(b.label)).forEach(e => {
+    const header = document.createElement("li");
+    header.textContent = e.label;
+    header.style.fontWeight = "bold";
+    header.style.marginTop = "10px";
+    appointmentList.appendChild(header);
+
+    const li = document.createElement("li");
+    li.textContent = e.summary;
+    appointmentList.appendChild(li);
+  });
+}
+
 
   prevBtn.addEventListener("click", () => {
     currentDate.setMonth(currentDate.getMonth() - 1);
