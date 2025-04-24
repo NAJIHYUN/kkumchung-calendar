@@ -81,6 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const year = date.getFullYear();
     const month = date.getMonth();
     const today = new Date();
+
     monthLabel.textContent = `${year}년 ${month + 1}월`;
 
     const startOfMonth = new Date(year, month, 1);
@@ -114,8 +115,10 @@ document.addEventListener("DOMContentLoaded", () => {
     icsEvents.forEach(event => {
       const start = toKSTDate(event.start, event.isAllDay);
       let end = toKSTDate(event.end || event.start, event.isAllDay);
+
+      // ✅ 종일 연속 일정일 경우 DTEND 하루 빼기
       if (event.isAllDay && start.toDateString() !== end.toDateString()) {
-        end.setDate(end.getDate() - 1); // 구글 캘린더 종일 일정은 다음날로 끝남
+        end.setDate(end.getDate() - 1);
       }
 
       if ((start.getMonth() === month || end.getMonth() === month) && start.getFullYear() === year) {
@@ -130,7 +133,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const isEnd = current.toDateString() === end.toDateString();
 
             if (isStart && isEnd) {
-              // ✅ 단일 일정만 클래스 적용
               cell.classList.add("range-single");
             } else if (isStart) {
               cell.classList.add("range-start");
@@ -155,11 +157,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     events.forEach(e => {
       const start = toKSTDate(e.start, e.isAllDay);
-      const end = toKSTDate(e.end || e.start, e.isAllDay);
+      let end = toKSTDate(e.end || e.start, e.isAllDay);
 
       if ((start.getMonth() !== month && end.getMonth() !== month) || start.getFullYear() !== year) return;
 
       const isAllDay = e.isAllDay || !e.start.includes("T");
+
+      // ✅ 종일 연속 일정일 경우 DTEND 하루 빼기
+      if (isAllDay && start.toDateString() !== end.toDateString()) {
+        end.setDate(end.getDate() - 1);
+      }
 
       if (isAllDay && start.toDateString() !== end.toDateString()) {
         const key = `${e.summary}__${start.toISOString().slice(0, 10)}`;
@@ -171,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         grouped.push({
           label: `${startLabel} ~ ${endLabel}`,
-          lines: [e.summary],
+          lines: [`<span style="color:#1c34d5">${e.summary}</span>`],
           date: start
         });
       } else {
@@ -202,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       item.lines.forEach(text => {
         const li = document.createElement("li");
-        li.textContent = text;
+        li.innerHTML = text; // HTML 허용!
         appointmentList.appendChild(li);
       });
     });
