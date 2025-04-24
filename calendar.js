@@ -9,9 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let icsEvents = [];
 
   const calendarUrl = "/api/proxy";
+
   fetch(calendarUrl)
-  
-  
     .then(response => response.text())
     .then(data => {
       console.log("✅ ICS 데이터 (원본 일부):", data.slice(0, 300));
@@ -36,17 +35,25 @@ document.addEventListener("DOMContentLoaded", () => {
         inEvent = false;
         events.push(event);
       } else if (inEvent) {
-        if (line.startsWith("SUMMARY:")) event.summary = line.replace("SUMMARY:", "");
-        else if (line.startsWith("DTSTART")) event.start = line.substring(line.indexOf(":") + 1);
-        else if (line.startsWith("DTEND")) event.end = line.substring(line.indexOf(":") + 1);
-        else if (line.startsWith("DESCRIPTION:")) event.description = line.replace("DESCRIPTION:", "");
+        if (line.startsWith("SUMMARY:")) {
+          event.summary = line.replace("SUMMARY:", "");
+        } else if (line.startsWith("DTSTART")) {
+          const match = line.match(/DTSTART.*:(.+)/);
+          if (match) event.start = match[1];
+        } else if (line.startsWith("DTEND")) {
+          const match = line.match(/DTEND.*:(.+)/);
+          if (match) event.end = match[1];
+        } else if (line.startsWith("DESCRIPTION:")) {
+          event.description = line.replace("DESCRIPTION:", "");
+        }
       }
     });
+
     return events;
   }
 
   function toKSTDate(icsDateStr) {
-    if (!icsDateStr.includes("T")) return new Date(icsDateStr); // 종일 일정
+    if (!icsDateStr || !icsDateStr.includes("T")) return new Date(icsDateStr); // 종일 일정 또는 형식 오류
     const utc = new Date(icsDateStr);
     return new Date(utc.getTime() + 9 * 60 * 60 * 1000);
   }
