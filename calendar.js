@@ -57,11 +57,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function toKSTDate(icsDateStr) {
     if (!icsDateStr) return new Date();
     if (!icsDateStr.includes("T")) return new Date(icsDateStr); // 종일 일정
-
     try {
       const normalized = icsDateStr.replace(/Z$/, "");
-      const dt = new Date(normalized.substring(0,4) + "-" + normalized.substring(4,6) + "-" + normalized.substring(6,8) + "T" + normalized.substring(9,11) + ":" + normalized.substring(11,13));
-      return new Date(dt.getTime() + 9 * 60 * 60 * 1000); // KST 변환
+      const dt = new Date(normalized.substring(0,4) + "-" + normalized.substring(4,6) + "-" + normalized.substring(6,8));
+      return new Date(dt.getTime() + 9 * 60 * 60 * 1000);
     } catch {
       return new Date(); // fallback
     }
@@ -71,10 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const year = date.getFullYear();
     const month = date.getMonth();
 
-// const todayUTC = new Date();
-// const today = new Date(todayUTC.getTime() + 9 * 60 * 60 * 1000);
-const today = new Date(); // ✅ 수정
-
+    const today = new Date();
 
     const startOfMonth = new Date(year, month, 1);
     const endOfMonth = new Date(year, month + 1, 0);
@@ -118,7 +114,7 @@ const today = new Date(); // ✅ 수정
       calendarGrid.appendChild(div);
     }
 
-    renderAppointments(eventsThisMonth);
+    renderAppointments(icsEvents);
   }
 
   function renderAppointments(events) {
@@ -126,18 +122,26 @@ const today = new Date(); // ✅ 수정
     const grouped = {};
 
     events.forEach(e => {
-      const dt = toKSTDate(e.start);
-      console.log("📆", dt, e.summary); // 디버깅 로그
+      const start = toKSTDate(e.start);
+      const end = toKSTDate(e.end || e.start);
 
-      const label = `${String(dt.getDate()).padStart(2, '0')}일 (${daysKor[dt.getDay()]})`;
-      if (!grouped[label]) grouped[label] = [];
+      let current = new Date(start);
+      while (current <= end) {
+        const label = `${String(current.getDate()).padStart(2, '0')}일 (${daysKor[current.getDay()]})`;
+        if (!grouped[label]) grouped[label] = [];
 
-      const time = e.start.includes("T")
-        ? `${dt.getHours().toString().padStart(2, '0')}:${dt.getMinutes().toString().padStart(2, '0')}`
-        : "종일";
+        let status = "진행";
+        if (current.toDateString() === start.toDateString()) status = "시작";
+        else if (current.toDateString() === end.toDateString()) status = "종료";
 
-      grouped[label].push(`${time} - ${e.summary}`);
-      console.log("📋 일정 추가됨:", time, "-", e.summary); // 디버깅 로그
+        grouped[label].push({
+          summary: e.summary,
+          label: status,
+          spanClass: "multi-day"
+        });
+
+        current.setDate(current.getDate() + 1);
+      }
     });
 
     appointmentList.innerHTML = "";
@@ -149,7 +153,8 @@ const today = new Date(); // ✅ 수정
       appointmentList.appendChild(header);
       grouped[day].forEach(e => {
         const li = document.createElement("li");
-        li.textContent = e;
+        li.textContent = `${e.label} - ${e.summary}`;
+        if (e.spanClass) li.classList.add(e.spanClass);
         appointmentList.appendChild(li);
       });
     });
@@ -164,9 +169,8 @@ const today = new Date(); // ✅ 수정
     currentDate.setMonth(currentDate.getMonth() + 1);
     renderCalendar(currentDate);
   });
-});
 
-document.getElementById("plus-btn")?.addEventListener("click", () => {
-  window.open("http://pf.kakao.com/_xckXiG/chat", "_blank");
+  document.querySelector(".plus-btn")?.addEventListener("click", () => {
+    window.open("http://pf.kakao.com/_xckXiG/chat", "_blank");
+  });
 });
-
