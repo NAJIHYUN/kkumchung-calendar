@@ -81,7 +81,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const year = date.getFullYear();
     const month = date.getMonth();
     const today = new Date();
-
     monthLabel.textContent = `${year}년 ${month + 1}월`;
 
     const startOfMonth = new Date(year, month, 1);
@@ -112,43 +111,37 @@ document.addEventListener("DOMContentLoaded", () => {
       calendarGrid.appendChild(cell);
     }
 
-    // ✅ 일정 색칠
     icsEvents.forEach(event => {
       const start = toKSTDate(event.start, event.isAllDay);
       let end = toKSTDate(event.end || event.start, event.isAllDay);
-
       if (event.isAllDay && start.toDateString() !== end.toDateString()) {
-        end.setDate(end.getDate() - 1); // 구글 캘린더 보정
+        end.setDate(end.getDate() - 1); // 구글 캘린더 종일 일정은 다음날로 끝남
       }
 
-      let current = new Date(start);
+      if ((start.getMonth() === month || end.getMonth() === month) && start.getFullYear() === year) {
+        let current = new Date(start);
+        while (current <= end) {
+          if (current.getMonth() === month && current.getFullYear() === year) {
+            const index = firstDayIndex + current.getDate() - 1;
+            const cell = calendarGrid.children[index];
+            if (!cell) break;
 
-      while (current <= end) {
-        if (current.getMonth() === month && current.getFullYear() === year) {
-          const index = firstDayIndex + current.getDate() - 1;
-          const cell = calendarGrid.children[index];
-          if (!cell) break;
+            const isStart = current.toDateString() === start.toDateString();
+            const isEnd = current.toDateString() === end.toDateString();
 
-          const isStart = current.toDateString() === start.toDateString();
-          const isEnd = current.toDateString() === end.toDateString();
-
-          if (isStart && isEnd) {
-            cell.classList.add("range-single", "range-start", "range-end");
-          } else if (isStart) {
-            const nextDay = new Date(current);
-            nextDay.setDate(current.getDate() + 1);
-            if (nextDay > end) {
+            if (isStart && isEnd) {
+              // ✅ 단일 일정만 클래스 적용
               cell.classList.add("range-single");
-            } else {
+            } else if (isStart) {
               cell.classList.add("range-start");
+            } else if (isEnd) {
+              cell.classList.add("range-end");
+            } else {
+              cell.classList.add("range-middle");
             }
-          } else if (isEnd) {
-            cell.classList.add("range-end");
-          } else {
-            cell.classList.add("range-middle");
           }
+          current.setDate(current.getDate() + 1);
         }
-        current.setDate(current.getDate() + 1);
       }
     });
 
@@ -162,11 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     events.forEach(e => {
       const start = toKSTDate(e.start, e.isAllDay);
-      let end = toKSTDate(e.end || e.start, e.isAllDay);
-
-      if (e.isAllDay && start.toDateString() !== end.toDateString()) {
-        end.setDate(end.getDate() - 1); // 보정
-      }
+      const end = toKSTDate(e.end || e.start, e.isAllDay);
 
       if ((start.getMonth() !== month && end.getMonth() !== month) || start.getFullYear() !== year) return;
 
