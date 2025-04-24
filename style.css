@@ -40,14 +40,14 @@ body {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  padding: 0 15px;
+  padding: 0 10px;
   font-weight: bold;
   color: #555;
 }
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  padding: 10px 15px;
+  padding: 10px;
 }
 .calendar-grid div {
   text-align: center;
