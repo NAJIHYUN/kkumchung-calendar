@@ -148,60 +148,70 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderAppointments(events, year, month) {
-    const daysKor = ['일', '월', '화', '수', '목', '금', '토'];
-    const grouped = [];
-    const addedSet = new Set();
+  const daysKor = ['일', '월', '화', '수', '목', '금', '토'];
+  const grouped = [];
+  const addedSet = new Set();
 
-    events.forEach(e => {
-      const start = toKSTDate(e.start, e.isAllDay);
-      const end = toKSTDate(e.end || e.start, e.isAllDay);
+  events.forEach(e => {
+    const start = toKSTDate(e.start, e.isAllDay);
+    const end = toKSTDate(e.end || e.start, e.isAllDay);
 
-      if ((start.getMonth() !== month && end.getMonth() !== month) || start.getFullYear() !== year) return;
+    if ((start.getMonth() !== month && end.getMonth() !== month) || start.getFullYear() !== year) return;
 
-      const isAllDay = e.isAllDay || !e.start.includes("T");
+    const isAllDay = e.isAllDay || !e.start.includes("T");
 
-      if (isAllDay && start.toDateString() !== end.toDateString()) {
-        const key = `${start.toISOString()}__${e.summary}`;
-        if (addedSet.has(key)) return;
-        addedSet.add(key);
+    // ✅ 연속 종일 일정은 key 기준 중복 제거
+    if (isAllDay && start.toDateString() !== end.toDateString()) {
+      const key = `${e.summary}__${start.getFullYear()}-${start.getMonth() + 1}`;
+      if (addedSet.has(key)) return;
+      addedSet.add(key);
 
-        const startLabel = `${start.getDate()}일 (${daysKor[start.getDay()]})`;
-        const endLabel = `${end.getDate()}일 (${daysKor[end.getDay()]})`;
-        grouped.push({
-          label: `${startLabel} ~ ${endLabel}`,
-          lines: [e.summary],
-        });
-      } else {
-        const label = `${start.getDate()}일 (${daysKor[start.getDay()]})`;
-        const time = isAllDay ? "" : `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')} - `;
-        const existing = grouped.find(g => g.label === label);
-        if (existing) {
-          existing.lines.push(`${time}${e.summary}`);
-        } else {
-grouped.push({
-  label,
-  lines: [`${time}${e.summary}`],
-  date: new Date(year, month, Number(label.split("일")[0]) || 1) // 🔥 여기에 추가!
-});
-        }
-      }
-    });
+      const startLabel = `${start.getDate()}일 (${daysKor[start.getDay()]})`;
+      const endLabel = `${end.getDate()}일 (${daysKor[end.getDay()]})`;
 
-    appointmentList.innerHTML = "";
-    grouped.sort((a, b) => a.label.localeCompare(b.label)).forEach(item => {
-      const header = document.createElement("li");
-      header.textContent = item.label;
-      header.style.fontWeight = "bold";
-      header.style.marginTop = "10px";
-      appointmentList.appendChild(header);
-
-      item.lines.forEach(text => {
-        const li = document.createElement("li");
-        li.textContent = text;
-        appointmentList.appendChild(li);
+      grouped.push({
+        label: `${startLabel} ~ ${endLabel}`,
+        lines: [e.summary],
+        date: start // ✅ 가장 앞 날짜 기준으로 정렬에 사용
       });
+
+    } else {
+      const label = `${start.getDate()}일 (${daysKor[start.getDay()]})`;
+      const time = isAllDay ? "" : `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')} - `;
+
+      const existing = grouped.find(g => g.label === label);
+      if (existing) {
+        existing.lines.push(`${time}${e.summary}`);
+      } else {
+        grouped.push({
+          label,
+          lines: [`${time}${e.summary}`],
+          date: new Date(year, month, start.getDate())
+        });
+      }
+    }
+  });
+
+  // ✅ 날짜 기준 정렬
+  grouped.sort((a, b) => (a.date || 0) - (b.date || 0));
+
+  // 렌더링
+  appointmentList.innerHTML = "";
+  grouped.forEach(item => {
+    const header = document.createElement("li");
+    header.textContent = item.label;
+    header.style.fontWeight = "bold";
+    header.style.marginTop = "10px";
+    appointmentList.appendChild(header);
+
+    item.lines.forEach(text => {
+      const li = document.createElement("li");
+      li.textContent = text;
+      appointmentList.appendChild(li);
     });
-  }
+  });
+}
+
 
   prevBtn.addEventListener("click", () => {
     currentDate.setMonth(currentDate.getMonth() - 1);
