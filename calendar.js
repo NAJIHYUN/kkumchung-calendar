@@ -128,15 +128,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const isEnd = current.toDateString() === end.toDateString();
 
         // ✅ 둘 다 true면 단일 일정 (range-single)
-        if (isStart && isEnd) {
-          cell.classList.add("range-single", "range-start", "range-end");
-        } else if (isStart) {
-          cell.classList.add("range-start");
-        } else if (isEnd) {
-          cell.classList.add("range-end");
-        } else {
-          cell.classList.add("range-middle");
-        }
+        // 이 부분만 수정
+if (isStart && isEnd) {
+  cell.classList.add("range-single", "range-start", "range-end");
+} else if (isStart && !isEnd && end > start) {
+  // 🟡 start만 있고 middle, end가 없으면 → 단일로 간주
+  const nextDay = new Date(current);
+  nextDay.setDate(current.getDate() + 1);
+  if (nextDay > end) {
+    cell.classList.add("range-single");
+  } else {
+    cell.classList.add("range-start");
+  }
+} else if (isEnd) {
+  cell.classList.add("range-end");
+} else {
+  cell.classList.add("range-middle");
+}
+
       }
       current.setDate(current.getDate() + 1);
     }
