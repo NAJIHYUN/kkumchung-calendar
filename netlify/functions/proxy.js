@@ -1,5 +1,5 @@
 export async function handler(event, context) {
-  const url = "https://calendar.google.com/calendar/ical/kkumchung1@gmail.com/public/basic.ics";
+  const url = "https://calendar.google.com/calendar/ical/kkumchung1@gmail.com/public/basic.ics?refresh=1";
 
   try {
     const res = await fetch(url);
