@@ -1,0 +1,123 @@
+
+* {
+  box-sizing: border-box;
+}
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f0f2f5;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px;
+}
+.calendar-wrapper {
+  background: white;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  font-weight: bold;
+  font-size: 1.2em;
+  background: white;
+}
+.nav-btn {
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+}
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  padding: 0 10px;
+  font-weight: bold;
+  color: #555;
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 10px;
+}
+.calendar-grid div {
+  text-align: center;
+  padding: 10px;
+  margin: 2px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+.calendar-grid div.today {
+  background-color: #4caf50;
+  color: white;
+}
+.calendar-grid div.highlight {
+  background-color: #f87171;
+  color: white;
+}
+.appointment-section {
+  padding: 20px;
+  border-top: 1px solid #eee;
+}
+.appointment-section h2 {
+  margin-top: 0;
+  font-size: 1em;
+  color: #666;
+}
+.appointment-section ul {
+  padding: 0;
+  list-style: none;
+  margin: 0;
+}
+.appointment-section li {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 0.95em;
+}
+.plus-btn {
+  font-family: 'Pretendard', 'Open Sans', sans-serif;
+  text-decoration: none;
+  padding: 12px;
+  background-color: #283593;
+  color: white;
+  font-size: 0.85em;
+  width: auto;
+  height: auto;
+  border-radius: 10px;
+  text-align: center;
+  line-height: 1.3;
+  margin: 0 20px 20px ;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: all 0.1s ease-out 0.1s;
+}
+
+.plus-btn:hover {
+  background-color: rgb(177, 207, 255);
+  color: #010739;
+}
+
+/* 데스크톱 대응용 */
+@media (min-width: 768px) {
+  .calendar-wrapper {
+    max-width: 600px;
+  }
+  .calendar-grid div {
+    padding: 12px 8px;
+  }
+  .calendar-header {
+    font-size: 1.4em;
+  }
+  .appointment-section h2 {
+    font-size: 1.1em;
+  }
+}

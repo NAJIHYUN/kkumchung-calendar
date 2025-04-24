@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2025 꿈청 월간 캘린더</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <style>
+    body {
+      font-family: 'Pretendard', sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div class="calendar-wrapper">
+    <div class="calendar-header">
+      <button class="nav-btn" id="prev-month">&#8592;</button>
+      <div id="month-label">2025년 4월</div>
+      <button class="nav-btn" id="next-month">&#8594;</button>
+    </div>
+    <div class="calendar-days">
+      <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+    </div>
+    <div id="calendar-grid" class="calendar-grid"></div>
+    <div class="appointment-section">
+      <h2>이번달 일정</h2>
+      <ul id="appointment-list"></ul>
+    </div>
+    <div class="plus-btn" href="http://pf.kakao.com/_xckXiG/chat" target="_blank">청년센터 4층/5층 사용 신청</div>
+  </div>
+  <script src="calendar.js"></script>
+</body>
+</html>
