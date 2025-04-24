@@ -51,7 +51,8 @@ body {
 }
 .calendar-grid div {
   text-align: center;
-  aspect-ratio: 1 / 1; 
+  aspect-ratio: 1 / 1;
+  line-height: 1.1;
   margin: 6px;
   border-radius: 34px;
   transition: 0.2s;
