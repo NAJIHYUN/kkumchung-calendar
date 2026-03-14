@@ -43,7 +43,7 @@
   --line: #d7d2cb;
   --text: #181818;
   --muted: #b8b2ab;
-  --accent: #4b2cff;
+  --accent: #3F15EA;
   --accent-soft: #ebe7ff;
   --event-blue: #b9c9fb;
   --event-red: #ffc0b3;
@@ -55,9 +55,7 @@ body {
   font-family: "Pretendard", sans-serif;
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.8), transparent 32%),
-    linear-gradient(180deg, #f7f5f3 0%, #efe9e3 100%);
+  background: #ffffff;
   color: var(--text);
   display: flex;
   justify-content: center;
@@ -150,6 +148,7 @@ body {
 
 .calendar-shell {
   padding: 20px;
+  background: #fafafa;
   border-bottom: 1px solid var(--line);
 }
 
@@ -160,12 +159,48 @@ body {
   gap: 12px;
 }
 
-.month-picker-input {
+.month-dropdown-anchor {
+  position: relative;
+}
+
+.month-dropdown {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  width: min(240px, calc(100vw - 48px));
+  padding: 8px;
+  border: 1px solid #e7e1da;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.99);
+  box-shadow: 0 14px 28px rgba(28, 21, 16, 0.12);
+}
+
+.month-list {
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.month-option {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #4f4a45;
+  font-family: "Pretendard", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.month-option.is-active {
+  background: rgba(75, 44, 255, 0.12);
+  color: var(--accent);
 }
 
 .month-display {
@@ -254,19 +289,19 @@ body {
 }
 
 .calendar-cell.has-event:not(.is-selected) {
-  color: var(--cell-fg, #4b2cff);
+  color: var(--cell-fg, #3F15EA);
 }
 
 .calendar-cell.has-event:not(.is-selected)::before {
-  background: var(--cell-bg, #d8ccff);
+  background: var(--cell-bg, #BDD0FC);
 }
 
 .calendar-cell.is-other-month.has-event:not(.is-selected) {
-  color: color-mix(in srgb, var(--cell-fg, #4b2cff) 52%, #ffffff);
+  color: color-mix(in srgb, var(--cell-fg, #3F15EA) 52%, #ffffff);
 }
 
 .calendar-cell.is-other-month.has-event:not(.is-selected)::before {
-  background: color-mix(in srgb, var(--cell-bg, #d8ccff) 48%, white);
+  background: color-mix(in srgb, var(--cell-bg, #BDD0FC) 48%, white);
 }
 
 .calendar-cell.is-today:not(.is-selected) {

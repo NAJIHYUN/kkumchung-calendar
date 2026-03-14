@@ -521,17 +521,31 @@ document.addEventListener("DOMContentLoaded", () => {
       };
     }
 
+    if (title.includes("수련회")) {
+      return {
+        background: "#FCC8BD",
+        foreground: "#EA1515"
+      };
+    }
+
+    if (title.includes("선교")) {
+      return {
+        background: "#FCBDF2",
+        foreground: "#EA15BB"
+      };
+    }
+
     if (title.includes("4층")) {
       return {
-        background: "#cdeecf",
-        foreground: "#238a3b"
+        background: "#B4F0B6",
+        foreground: "#008404"
       };
     }
 
     if (title.includes("5층")) {
       return {
-        background: "#cdeecf",
-        foreground: "#238a3b"
+        background: "#B4F0B6",
+        foreground: "#008404"
       };
     }
 
@@ -543,8 +557,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     return {
-      background: "#d8ccff",
-      foreground: "#4b2cff"
+      background: "#BDD0FC",
+      foreground: "#3F15EA"
     };
   }
 
