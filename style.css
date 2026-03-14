@@ -75,7 +75,7 @@ body {
 }
 
 .top-bar {
-  height: 74px;
+  height: 50px;
   padding: 0 18px;
   background: rgba(255, 255, 255, 0.84);
   border-bottom: 1px solid var(--line);
@@ -94,8 +94,8 @@ body {
 }
 
 .top-title {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 600;
   letter-spacing: -0.04em;
   color: #2b2622;
 }
@@ -123,8 +123,8 @@ body {
 }
 
 .add-btn {
-  height: 40px;
-  padding: 0 15px;
+  height: 30px;
+  padding: 0 10px;
   border-radius: 20px;
   display: inline-flex;
   align-items: center;
@@ -141,6 +141,9 @@ body {
 .add-btn svg {
   width: 18px;
   height: 18px;
+  display: block;
+  flex: 0 0 auto;
+  align-self: center;
 }
 
 .calendar-shell {

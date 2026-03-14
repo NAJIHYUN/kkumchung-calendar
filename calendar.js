@@ -93,16 +93,26 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
 
-    const raw = icsDateStr.replace("Z", "");
-    const utcDate = new Date(Date.UTC(
-      Number(raw.substring(0, 4)),
-      Number(raw.substring(4, 6)) - 1,
-      Number(raw.substring(6, 8)),
-      Number(raw.substring(9, 11)),
-      Number(raw.substring(11, 13))
-    ));
+    if (icsDateStr.endsWith("Z")) {
+      const raw = icsDateStr.slice(0, -1);
+      const utcDate = new Date(Date.UTC(
+        Number(raw.substring(0, 4)),
+        Number(raw.substring(4, 6)) - 1,
+        Number(raw.substring(6, 8)),
+        Number(raw.substring(9, 11)),
+        Number(raw.substring(11, 13))
+      ));
 
-    return new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
+      return new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
+    }
+
+    return new Date(
+      Number(icsDateStr.substring(0, 4)),
+      Number(icsDateStr.substring(4, 6)) - 1,
+      Number(icsDateStr.substring(6, 8)),
+      Number(icsDateStr.substring(9, 11)),
+      Number(icsDateStr.substring(11, 13))
+    );
   }
 
   function isSameDate(a, b) {
@@ -253,7 +263,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const formatter = new Intl.DateTimeFormat("ko-KR", {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: false
+      hour12: false,
+      timeZone: "Asia/Seoul"
     });
 
     return `${formatter.format(event.startDate)} - ${formatter.format(event.endDate)}`;
@@ -264,15 +275,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (title.includes("4층")) {
       return {
-        background: "#ffd1ad",
-        foreground: "#d76300"
+        background: "#cdeecf",
+        foreground: "#238a3b"
       };
     }
 
     if (title.includes("5층")) {
       return {
-        background: "#cfe0ff",
-        foreground: "#295dcb"
+        background: "#cdeecf",
+        foreground: "#238a3b"
       };
     }
 
