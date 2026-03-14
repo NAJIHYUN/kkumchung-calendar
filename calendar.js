@@ -4,14 +4,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const prevBtn = document.getElementById("prev-month");
   const nextBtn = document.getElementById("next-month");
   const monthToggle = document.getElementById("month-toggle");
+  const monthPicker = document.getElementById("month-picker");
+  const yearSelect = document.getElementById("year-select");
+  const monthSelect = document.getElementById("month-select");
   const appointmentList = document.getElementById("appointment-list");
   const selectedDateLabel = document.getElementById("selected-date-label");
 
   const calendarUrl = "/api/proxy";
   const now = new Date();
+  const monthNames = Array.from({ length: 12 }, (_, index) => `${index + 1}월`);
   let currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
   let selectedDate = null;
   let calendarEvents = [];
+  let isMonthPickerOpen = false;
+
+  initializeMonthPicker();
 
   fetch(calendarUrl)
     .then((response) => response.text())
@@ -333,6 +340,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function initializeMonthPicker() {
+    const startYear = now.getFullYear() - 5;
+    const endYear = now.getFullYear() + 5;
+
+    for (let year = startYear; year <= endYear; year += 1) {
+      const option = document.createElement("option");
+      option.value = String(year);
+      option.textContent = `${year}년`;
+      yearSelect.appendChild(option);
+    }
+
+    monthNames.forEach((label, index) => {
+      const option = document.createElement("option");
+      option.value = String(index);
+      option.textContent = label;
+      monthSelect.appendChild(option);
+    });
+  }
+
+  function syncMonthPicker(date) {
+    yearSelect.value = String(date.getFullYear());
+    monthSelect.value = String(date.getMonth());
+  }
+
+  function setMonthPickerOpen(isOpen) {
+    isMonthPickerOpen = isOpen;
+    monthPicker.hidden = !isOpen;
+    monthToggle.setAttribute("aria-expanded", String(isOpen));
+  }
+
   function renderCalendar(date) {
     ensureSelectedDateInMonth(date);
 
@@ -340,6 +377,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const month = date.getMonth();
 
     monthLabel.textContent = `${year}년 ${month + 1}월`;
+    syncMonthPicker(date);
     calendarGrid.innerHTML = "";
 
     const firstOfMonth = new Date(year, month, 1);
@@ -519,13 +557,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const item = document.createElement("li");
       item.className = "appointment-card";
       item.style.cssText = getEventStyle(event);
-      const titleText = isFilteredByDate
-        ? escapeHtml(event.summary || "제목 없는 일정")
-        : `${formatEventDatePrefix(event)} ${escapeHtml(event.summary || "제목 없는 일정")}`;
+      const titleText = escapeHtml(event.summary || "제목 없는 일정");
+      const titleMarkup = isFilteredByDate
+        ? `<span class="appointment-title">${titleText}</span>`
+        : `
+          <span class="appointment-date-prefix">${formatEventDatePrefix(event)}</span>
+          <span class="appointment-title">${titleText}</span>
+        `;
 
       item.innerHTML = `
         <div class="appointment-main">
-          <span class="appointment-title">${titleText}</span>
+          ${titleMarkup}
         </div>
         <span class="appointment-time">${formatEventTime(event)}</span>
       `;
@@ -554,8 +596,30 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   monthToggle.addEventListener("click", () => {
-    currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    setMonthPickerOpen(!isMonthPickerOpen);
+  });
+
+  yearSelect.addEventListener("change", () => {
+    currentDate = new Date(Number(yearSelect.value), Number(monthSelect.value), 1);
     selectedDate = null;
     renderCalendar(currentDate);
+    setMonthPickerOpen(false);
+  });
+
+  monthSelect.addEventListener("change", () => {
+    currentDate = new Date(Number(yearSelect.value), Number(monthSelect.value), 1);
+    selectedDate = null;
+    renderCalendar(currentDate);
+    setMonthPickerOpen(false);
+  });
+
+  document.addEventListener("click", (event) => {
+    if (
+      isMonthPickerOpen &&
+      !monthPicker.contains(event.target) &&
+      !monthToggle.contains(event.target)
+    ) {
+      setMonthPickerOpen(false);
+    }
   });
 });

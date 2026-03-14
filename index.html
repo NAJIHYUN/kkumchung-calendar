@@ -22,7 +22,7 @@
 
     <div class="calendar-shell">
       <div class="calendar-header">
-        <button class="month-display" id="month-toggle" type="button" aria-label="월 이동">
+        <button class="month-display" id="month-toggle" type="button" aria-label="월 이동" aria-expanded="false" aria-controls="month-picker">
           <span id="month-label">2022년 9월</span>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M6 9l6 6 6-6"></path>
@@ -40,6 +40,16 @@
             </svg>
           </button>
         </div>
+      </div>
+      <div class="month-picker" id="month-picker" hidden>
+        <label class="picker-field">
+          <span>연도</span>
+          <select id="year-select" aria-label="연도 선택"></select>
+        </label>
+        <label class="picker-field">
+          <span>월</span>
+          <select id="month-select" aria-label="월 선택"></select>
+        </label>
       </div>
 
       <div class="calendar-days">

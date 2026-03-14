@@ -75,6 +75,9 @@ body {
 }
 
 .top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   height: 50px;
   padding: 0 18px;
   background: rgba(255, 255, 255, 0.84);
@@ -158,6 +161,41 @@ body {
   gap: 12px;
 }
 
+.month-picker {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #e3ddd6;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.picker-field {
+  display: grid;
+  gap: 6px;
+}
+
+.picker-field span {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b857f;
+}
+
+.picker-field select {
+  width: 100%;
+  height: 38px;
+  border: 1px solid #ddd6ff;
+  border-radius: 12px;
+  padding: 0 12px;
+  background: #fff;
+  color: #2b2622;
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  appearance: none;
+}
+
 .month-display {
   display: inline-flex;
   align-items: center;
@@ -173,6 +211,8 @@ body {
   width: 20px;
   height: 20px;
   color: #6d6762;
+  display: block;
+  transform: translateY(1px);
 }
 
 .month-nav {
@@ -296,7 +336,7 @@ body {
 }
 
 .appointment-section {
-  padding: 24px 20px 28px;
+  padding: 20px;
 }
 
 .section-date {
@@ -319,7 +359,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 12px;
   border-radius: 18px;
   background: var(--event-bg, #dbe5ff);
   color: var(--event-fg, #2b42c5);
@@ -329,6 +369,13 @@ body {
   min-width: 0;
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.appointment-date-prefix {
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .appointment-title {
@@ -350,10 +397,10 @@ body {
 }
 
 @media (max-width: 389px) {
-  .appointment-section {
-    padding-left: 16px;
-    padding-right: 16px;
+  .month-picker {
+    grid-template-columns: 1fr;
   }
+
 }
 
 @media (min-width: 768px) {
