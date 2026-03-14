@@ -150,6 +150,7 @@ body {
   padding: 20px;
   background: #fafafa;
   border-bottom: 1px solid var(--line);
+  touch-action: pan-y;
 }
 
 .calendar-header {

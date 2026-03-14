@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const monthLabel = document.getElementById("month-label");
+  const calendarShell = document.querySelector(".calendar-shell");
   const calendarGrid = document.getElementById("calendar-grid");
   const prevBtn = document.getElementById("prev-month");
   const nextBtn = document.getElementById("next-month");
@@ -15,6 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedDate = null;
   let calendarEvents = [];
   let isMonthDropdownOpen = false;
+  let swipeStartX = null;
+  let swipeStartY = null;
+  let didSwipeNavigate = false;
 
   initializeMonthDropdown();
 
@@ -660,4 +664,40 @@ document.addEventListener("DOMContentLoaded", () => {
       setMonthDropdownOpen(false);
     }
   });
+
+  calendarShell?.addEventListener("touchstart", (event) => {
+    const touch = event.touches[0];
+    swipeStartX = touch.clientX;
+    swipeStartY = touch.clientY;
+    didSwipeNavigate = false;
+  }, { passive: true });
+
+  calendarShell?.addEventListener("touchmove", (event) => {
+    if (swipeStartX === null || swipeStartY === null || didSwipeNavigate) {
+      return;
+    }
+
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - swipeStartX;
+    const deltaY = touch.clientY - swipeStartY;
+
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) <= Math.abs(deltaY)) {
+      return;
+    }
+
+    currentDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + (deltaX < 0 ? 1 : -1),
+      1
+    );
+    selectedDate = null;
+    renderCalendar(currentDate);
+    didSwipeNavigate = true;
+  }, { passive: true });
+
+  calendarShell?.addEventListener("touchend", () => {
+    swipeStartX = null;
+    swipeStartY = null;
+    didSwipeNavigate = false;
+  }, { passive: true });
 });
