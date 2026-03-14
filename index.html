@@ -5,29 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>2025 꿈청 월간 캘린더</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
-  <style>
-    body {
-      font-family: 'Pretendard', sans-serif;
-    }
-  </style>
 </head>
 <body>
   <div class="calendar-wrapper">
-    <div class="calendar-header">
-      <button class="nav-btn" id="prev-month">&#8592;</button>
-      <div id="month-label">2025년 4월</div>
-      <button class="nav-btn" id="next-month">&#8594;</button>
+    <div class="top-bar">
+      <div class="top-title">꿈청 캘린더</div>
+      <a class="add-btn" href="http://pf.kakao.com/_xckXiG/chat" target="_blank" rel="noreferrer" aria-label="새교 예약">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="4" width="14" height="14" rx="2"></rect>
+          <path d="M7 2v4M13 2v4M3 9h14"></path>
+          <path d="M7 12h2M11 12h2M7 15h2M11 15h2"></path>
+        </svg>
+        <span>새교 예약</span>
+      </a>
     </div>
-    <div class="calendar-days">
-      <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+
+    <div class="calendar-shell">
+      <div class="calendar-header">
+        <button class="month-display" id="month-toggle" type="button" aria-label="월 이동">
+          <span id="month-label">2022년 9월</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 9l6 6 6-6"></path>
+          </svg>
+        </button>
+        <div class="month-nav" aria-label="월 이동 버튼">
+          <button class="nav-btn" id="prev-month" type="button" aria-label="이전 달">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6"></path>
+            </svg>
+          </button>
+          <button class="nav-btn" id="next-month" type="button" aria-label="다음 달">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 18l6-6-6-6"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="calendar-days">
+        <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+      </div>
+      <div id="calendar-grid" class="calendar-grid"></div>
+      <div class="sheet-handle" aria-hidden="true"></div>
     </div>
-    <div id="calendar-grid" class="calendar-grid"></div>
+
     <div class="appointment-section">
-      <h2>이번달 일정</h2>
-      <ul id="appointment-list"></ul>
+      <div class="section-date" id="selected-date-label">2022년 9월 20일</div>
+      <ul id="appointment-list" class="appointment-list"></ul>
     </div>
-    <a class="plus-btn" href="http://pf.kakao.com/_xckXiG/chat" target="_blank">청년센터 4층/5층 사용 신청</a>
   </div>
   <script src="calendar.js"></script>
 </body>
