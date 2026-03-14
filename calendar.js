@@ -10,14 +10,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const calendarUrl = "/api/proxy";
   const now = new Date();
   let currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
-  let selectedDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let selectedDate = null;
   let calendarEvents = [];
 
   fetch(calendarUrl)
     .then((response) => response.text())
     .then((data) => {
       calendarEvents = parseICS(data).map(normalizeEvent);
-      selectedDate = getInitialSelectedDate(calendarEvents, currentDate, selectedDate);
       renderCalendar(currentDate);
     })
     .catch((error) => {
@@ -141,49 +140,16 @@ document.addEventListener("DOMContentLoaded", () => {
     return eventMap;
   }
 
-  function getFirstEventDateInMonth(events, baseDate) {
-    const year = baseDate.getFullYear();
-    const month = baseDate.getMonth();
-
-    const firstEvent = events
-      .filter((event) => event.startDate.getFullYear() === year && event.startDate.getMonth() === month)
-      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0];
-
-    return firstEvent ? new Date(firstEvent.startDate) : null;
-  }
-
-  function getInitialSelectedDate(events, monthDate, fallbackDate) {
-    const fallbackKey = toDateKey(fallbackDate);
-    const hasEventOnFallback = events.some((event) => {
-      const cursor = new Date(event.startDate);
-
-      while (cursor <= event.endDate) {
-        if (toDateKey(cursor) === fallbackKey) {
-          return true;
-        }
-        cursor.setDate(cursor.getDate() + 1);
-      }
-
-      return false;
-    });
-
-    if (
-      fallbackDate.getFullYear() === monthDate.getFullYear() &&
-      fallbackDate.getMonth() === monthDate.getMonth() &&
-      hasEventOnFallback
-    ) {
-      return new Date(fallbackDate);
+  function ensureSelectedDateInMonth(date) {
+    if (!selectedDate) {
+      return;
     }
 
-    return getFirstEventDateInMonth(events, monthDate) || new Date(fallbackDate);
-  }
-
-  function ensureSelectedDateInMonth(date) {
     if (
       selectedDate.getFullYear() !== date.getFullYear() ||
       selectedDate.getMonth() !== date.getMonth()
     ) {
-      selectedDate = new Date(date.getFullYear(), date.getMonth(), 1);
+      selectedDate = null;
     }
   }
 
@@ -230,25 +196,32 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.classList.add("is-today");
       }
 
-      if (isSameDate(cellDate, selectedDate) && hasEvent) {
+      if (selectedDate && isSameDate(cellDate, selectedDate) && hasEvent) {
         cell.classList.add("is-selected");
       }
 
       cell.addEventListener("click", () => {
-        selectedDate = new Date(cellDate);
+        const nextSelectedDate = new Date(cellDate);
+
         if (
-          selectedDate.getMonth() !== currentDate.getMonth() ||
-          selectedDate.getFullYear() !== currentDate.getFullYear()
+          nextSelectedDate.getMonth() !== currentDate.getMonth() ||
+          nextSelectedDate.getFullYear() !== currentDate.getFullYear()
         ) {
-          currentDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+          currentDate = new Date(nextSelectedDate.getFullYear(), nextSelectedDate.getMonth(), 1);
+          selectedDate = nextSelectedDate;
+        } else if (selectedDate && isSameDate(nextSelectedDate, selectedDate)) {
+          selectedDate = null;
+        } else {
+          selectedDate = nextSelectedDate;
         }
+
         renderCalendar(currentDate);
       });
 
       calendarGrid.appendChild(cell);
     }
 
-    renderAppointments(getEventsForMonth(calendarEvents, date), date);
+    renderAppointments(date, eventMap);
   }
 
   function getEventsForMonth(events, monthDate) {
@@ -262,6 +235,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function formatSectionTitle(date) {
     return `${date.getFullYear()}년 ${date.getMonth() + 1}월 일정`;
+  }
+
+  function formatSelectedSectionTitle(date) {
+    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 일정`;
+  }
+
+  function formatEventDatePrefix(event) {
+    return `${event.startDate.getMonth() + 1}/${event.startDate.getDate()}`;
   }
 
   function formatEventTime(event) {
@@ -330,8 +311,15 @@ document.addEventListener("DOMContentLoaded", () => {
     ].join("; ");
   }
 
-  function renderAppointments(events, monthDate) {
-    selectedDateLabel.textContent = formatSectionTitle(monthDate);
+  function renderAppointments(monthDate, eventMap) {
+    const isFilteredByDate = Boolean(selectedDate);
+    const events = isFilteredByDate
+      ? (eventMap.get(toDateKey(selectedDate)) || [])
+      : getEventsForMonth(calendarEvents, monthDate);
+
+    selectedDateLabel.textContent = isFilteredByDate
+      ? formatSelectedSectionTitle(selectedDate)
+      : formatSectionTitle(monthDate);
     appointmentList.innerHTML = "";
 
     const sortedEvents = [...events].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
@@ -348,10 +336,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const item = document.createElement("li");
       item.className = "appointment-card";
       item.style.cssText = getEventStyle(event);
+      const titleText = isFilteredByDate
+        ? escapeHtml(event.summary || "제목 없는 일정")
+        : `${formatEventDatePrefix(event)} ${escapeHtml(event.summary || "제목 없는 일정")}`;
 
       item.innerHTML = `
         <div class="appointment-main">
-          <span class="appointment-title">${escapeHtml(event.summary || "제목 없는 일정")}</span>
+          <span class="appointment-title">${titleText}</span>
         </div>
         <span class="appointment-time">${formatEventTime(event)}</span>
       `;
@@ -381,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   monthToggle.addEventListener("click", () => {
     currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    selectedDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    selectedDate = null;
     renderCalendar(currentDate);
   });
 });
