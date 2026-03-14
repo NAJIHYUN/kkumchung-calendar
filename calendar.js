@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .then((response) => response.text())
     .then((data) => {
       calendarEvents = parseICS(data).map(normalizeEvent);
+      selectedDate = getInitialSelectedDate(calendarEvents, currentDate, selectedDate);
       renderCalendar(currentDate);
     })
     .catch((error) => {
@@ -140,6 +141,43 @@ document.addEventListener("DOMContentLoaded", () => {
     return eventMap;
   }
 
+  function getFirstEventDateInMonth(events, baseDate) {
+    const year = baseDate.getFullYear();
+    const month = baseDate.getMonth();
+
+    const firstEvent = events
+      .filter((event) => event.startDate.getFullYear() === year && event.startDate.getMonth() === month)
+      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0];
+
+    return firstEvent ? new Date(firstEvent.startDate) : null;
+  }
+
+  function getInitialSelectedDate(events, monthDate, fallbackDate) {
+    const fallbackKey = toDateKey(fallbackDate);
+    const hasEventOnFallback = events.some((event) => {
+      const cursor = new Date(event.startDate);
+
+      while (cursor <= event.endDate) {
+        if (toDateKey(cursor) === fallbackKey) {
+          return true;
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      return false;
+    });
+
+    if (
+      fallbackDate.getFullYear() === monthDate.getFullYear() &&
+      fallbackDate.getMonth() === monthDate.getMonth() &&
+      hasEventOnFallback
+    ) {
+      return new Date(fallbackDate);
+    }
+
+    return getFirstEventDateInMonth(events, monthDate) || new Date(fallbackDate);
+  }
+
   function ensureSelectedDateInMonth(date) {
     if (
       selectedDate.getFullYear() !== date.getFullYear() ||
@@ -173,10 +211,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const cell = document.createElement("button");
       cell.type = "button";
       cell.className = "calendar-cell";
-      cell.textContent = cellDate.getDate();
+      cell.innerHTML = `<span class="calendar-day-number">${cellDate.getDate()}</span>`;
 
       const key = toDateKey(cellDate);
       const hasEvent = eventMap.has(key);
+      const dateEvents = eventMap.get(key) || [];
 
       if (cellDate.getMonth() !== month) {
         cell.classList.add("is-other-month");
@@ -184,6 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (hasEvent) {
         cell.classList.add("has-event");
+        cell.style.cssText = getDateCellStyle(dateEvents);
       }
 
       if (isSameDate(cellDate, now)) {
@@ -208,11 +248,20 @@ document.addEventListener("DOMContentLoaded", () => {
       calendarGrid.appendChild(cell);
     }
 
-    renderAppointments(eventMap.get(toDateKey(selectedDate)) || []);
+    renderAppointments(getEventsForMonth(calendarEvents, date), date);
   }
 
-  function formatSelectedDate(date) {
-    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+  function getEventsForMonth(events, monthDate) {
+    const year = monthDate.getFullYear();
+    const month = monthDate.getMonth();
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999);
+
+    return events.filter((event) => event.startDate <= monthEnd && event.endDate >= monthStart);
+  }
+
+  function formatSectionTitle(date) {
+    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 일정`;
   }
 
   function formatEventTime(event) {
@@ -227,14 +276,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     return `${formatter.format(event.startDate)} - ${formatter.format(event.endDate)}`;
-  }
-
-  function getEventIcon(event) {
-    if (event.isAllDay) {
-      return "🎈";
-    }
-
-    return event.summary && /회의|미팅|meeting/i.test(event.summary) ? "👥" : "🎫";
   }
 
   function getEventColors(summary = "") {
@@ -276,8 +317,21 @@ document.addEventListener("DOMContentLoaded", () => {
     ].join("; ");
   }
 
-  function renderAppointments(events) {
-    selectedDateLabel.textContent = formatSelectedDate(selectedDate);
+  function getDateCellStyle(events) {
+    if (!events || events.length === 0) {
+      return "";
+    }
+
+    const colors = getEventColors(events[0].summary || "");
+
+    return [
+      `--cell-bg: ${colors.background}`,
+      `--cell-fg: ${colors.foreground}`
+    ].join("; ");
+  }
+
+  function renderAppointments(events, monthDate) {
+    selectedDateLabel.textContent = formatSectionTitle(monthDate);
     appointmentList.innerHTML = "";
 
     const sortedEvents = [...events].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
@@ -297,7 +351,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       item.innerHTML = `
         <div class="appointment-main">
-          <span class="appointment-icon" aria-hidden="true">${getEventIcon(event)}</span>
           <span class="appointment-title">${escapeHtml(event.summary || "제목 없는 일정")}</span>
         </div>
         <span class="appointment-time">${formatEventTime(event)}</span>
