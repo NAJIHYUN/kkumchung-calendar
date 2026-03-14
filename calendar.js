@@ -4,7 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const prevBtn = document.getElementById("prev-month");
   const nextBtn = document.getElementById("next-month");
   const monthToggle = document.getElementById("month-toggle");
-  const monthPickerInput = document.getElementById("month-picker-input");
+  const monthDropdown = document.getElementById("month-dropdown");
+  const monthList = document.getElementById("month-list");
   const appointmentList = document.getElementById("appointment-list");
   const selectedDateLabel = document.getElementById("selected-date-label");
 
@@ -13,6 +14,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
   let selectedDate = null;
   let calendarEvents = [];
+  let isMonthDropdownOpen = false;
+
+  initializeMonthDropdown();
 
   fetch(calendarUrl)
     .then((response) => response.text())
@@ -334,6 +338,61 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function initializeMonthDropdown() {
+    const startYear = now.getFullYear() - 5;
+    const endYear = now.getFullYear() + 5;
+
+    for (let year = startYear; year <= endYear; year += 1) {
+      for (let month = 0; month < 12; month += 1) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "month-option";
+        button.textContent = `${year}년 ${month + 1}월`;
+        button.dataset.year = String(year);
+        button.dataset.month = String(month);
+        button.addEventListener("click", () => {
+          currentDate = new Date(year, month, 1);
+          selectedDate = null;
+          renderCalendar(currentDate);
+          setMonthDropdownOpen(false);
+        });
+        monthList.appendChild(button);
+      }
+    }
+  }
+
+  function syncMonthDropdown(date) {
+    let activeButton = null;
+
+    monthList.querySelectorAll(".month-option").forEach((button) => {
+      const isActive = (
+        Number(button.dataset.year) === date.getFullYear() &&
+        Number(button.dataset.month) === date.getMonth()
+      );
+
+      button.classList.toggle("is-active", isActive);
+
+      if (isActive) {
+        activeButton = button;
+      }
+    });
+
+    if (activeButton && isMonthDropdownOpen) {
+      const top = activeButton.offsetTop - 12;
+      monthList.scrollTop = Math.max(top, 0);
+    }
+  }
+
+  function setMonthDropdownOpen(isOpen) {
+    isMonthDropdownOpen = isOpen;
+    monthDropdown.hidden = !isOpen;
+    monthToggle.setAttribute("aria-expanded", String(isOpen));
+
+    if (isOpen) {
+      syncMonthDropdown(currentDate);
+    }
+  }
+
   function renderCalendar(date) {
     ensureSelectedDateInMonth(date);
 
@@ -341,7 +400,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const month = date.getMonth();
 
     monthLabel.textContent = `${year}년 ${month + 1}월`;
-    monthPickerInput.value = `${year}-${String(month + 1).padStart(2, "0")}`;
+    syncMonthDropdown(date);
     calendarGrid.innerHTML = "";
 
     const firstOfMonth = new Date(year, month, 1);
@@ -425,12 +484,20 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 일정`;
   }
 
+  function formatMonthDay(date) {
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  }
+
   function formatEventDatePrefix(event) {
-    return `${event.startDate.getMonth() + 1}/${event.startDate.getDate()}`;
+    return formatMonthDay(event.startDate);
   }
 
   function formatEventTime(event) {
     if (event.isAllDay) {
+      if (!isSameDate(event.startDate, event.endDate)) {
+        return `${formatMonthDay(event.startDate)}~${formatMonthDay(event.endDate)}`;
+      }
+
       return "종일";
     }
 
@@ -446,6 +513,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getEventColors(summary = "") {
     const title = summary.toLowerCase();
+
+    if (title.includes("꿈청 금요기도회")) {
+      return {
+        background: "#d7f0ff",
+        foreground: "#1f87c9"
+      };
+    }
 
     if (title.includes("4층")) {
       return {
@@ -560,22 +634,16 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   monthToggle.addEventListener("click", () => {
-    if (typeof monthPickerInput.showPicker === "function") {
-      monthPickerInput.showPicker();
-      return;
-    }
-
-    monthPickerInput.click();
+    setMonthDropdownOpen(!isMonthDropdownOpen);
   });
 
-  monthPickerInput.addEventListener("change", () => {
-    if (!monthPickerInput.value) {
-      return;
+  document.addEventListener("click", (event) => {
+    if (
+      isMonthDropdownOpen &&
+      !monthDropdown.contains(event.target) &&
+      !monthToggle.contains(event.target)
+    ) {
+      setMonthDropdownOpen(false);
     }
-
-    const [year, month] = monthPickerInput.value.split("-").map(Number);
-    currentDate = new Date(year, month - 1, 1);
-    selectedDate = null;
-    renderCalendar(currentDate);
   });
 });
