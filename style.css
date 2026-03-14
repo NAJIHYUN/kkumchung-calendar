@@ -94,8 +94,8 @@ body {
 }
 
 .top-title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 500;
   letter-spacing: -0.04em;
   color: #2b2622;
 }
@@ -230,7 +230,7 @@ body {
 .calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  margin-top: 24px;
+  margin-top: 20px;
   color: var(--muted);
   font-size: 12px;
   font-weight: 500;
@@ -293,7 +293,7 @@ body {
 }
 
 .calendar-cell.has-event:not(.is-selected)::before {
-  background: var(--cell-bg, #BDD0FC);
+  background: var(--cell-bg, #d9e4ff);
 }
 
 .calendar-cell.is-other-month.has-event:not(.is-selected) {
@@ -301,7 +301,7 @@ body {
 }
 
 .calendar-cell.is-other-month.has-event:not(.is-selected)::before {
-  background: color-mix(in srgb, var(--cell-bg, #BDD0FC) 48%, white);
+  background: color-mix(in srgb, var(--cell-bg, #d9e4ff) 48%, white);
 }
 
 .calendar-cell.is-today:not(.is-selected) {
@@ -374,12 +374,11 @@ body {
 
 .appointment-date-prefix {
   flex: 0 0 auto;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
 }
 
 .appointment-title {
-  font-size: 14px;
+  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -387,7 +386,7 @@ body {
 
 .appointment-time {
   flex: 0 0 auto;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .empty-state {

@@ -514,38 +514,38 @@ document.addEventListener("DOMContentLoaded", () => {
   function getEventColors(summary = "") {
     const title = summary.toLowerCase();
 
-    if (title.includes("꿈청 금요기도회")) {
-      return {
-        background: "#d7f0ff",
-        foreground: "#1f87c9"
-      };
-    }
-
-    if (title.includes("수련회")) {
-      return {
-        background: "#FCC8BD",
-        foreground: "#EA1515"
-      };
-    }
-
-    if (title.includes("선교")) {
-      return {
-        background: "#FCBDF2",
-        foreground: "#EA15BB"
-      };
-    }
-
     if (title.includes("4층")) {
       return {
-        background: "#B4F0B6",
+        background: "#cdf1ce",
         foreground: "#008404"
       };
     }
 
     if (title.includes("5층")) {
       return {
-        background: "#B4F0B6",
+        background: "#cdf1ce",
         foreground: "#008404"
+      };
+    }
+
+    if (title.includes("꿈청 금요기도회")) {
+      return {
+        background: "#d7f0ff",
+        foreground: "#0a67a2"
+      };
+    }
+
+    if (title.includes("수련회")) {
+      return {
+        background: "#ffdcd5",
+        foreground: "#EA1515"
+      };
+    }
+
+    if (title.includes("선교")) {
+      return {
+        background: "#ffe1fa",
+        foreground: "#EA15BB"
       };
     }
 
@@ -557,7 +557,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     return {
-      background: "#BDD0FC",
+      background: "#d9e4ff",
       foreground: "#3F15EA"
     };
   }
