@@ -52,11 +52,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (rawKey.startsWith("SUMMARY")) {
         event.summary = value;
+      } else if (rawKey.startsWith("UID")) {
+        event.uid = value;
       } else if (rawKey.startsWith("DTSTART")) {
         event.start = value;
         event.isAllDay = !value.includes("T");
       } else if (rawKey.startsWith("DTEND")) {
         event.end = value;
+      } else if (rawKey.startsWith("RRULE")) {
+        event.rrule = value;
+      } else if (rawKey.startsWith("EXDATE")) {
+        event.exdates = (event.exdates || []).concat(value.split(",").map((item) => item.trim()));
+      } else if (rawKey.startsWith("RECURRENCE-ID")) {
+        event.recurrenceId = value;
       } else if (rawKey.startsWith("DESCRIPTION")) {
         event.description = value;
       }
@@ -75,6 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     return {
       ...event,
+      recurrenceIdDate: event.recurrenceId ? toKSTDate(event.recurrenceId, event.isAllDay) : null,
       startDate,
       endDate
     };
@@ -95,15 +104,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (icsDateStr.endsWith("Z")) {
       const raw = icsDateStr.slice(0, -1);
-      const utcDate = new Date(Date.UTC(
+      return new Date(Date.UTC(
         Number(raw.substring(0, 4)),
         Number(raw.substring(4, 6)) - 1,
         Number(raw.substring(6, 8)),
         Number(raw.substring(9, 11)),
         Number(raw.substring(11, 13))
       ));
-
-      return new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
     }
 
     return new Date(
@@ -150,6 +157,169 @@ document.addEventListener("DOMContentLoaded", () => {
     return eventMap;
   }
 
+  function overlapsRange(event, rangeStart, rangeEnd) {
+    return event.startDate <= rangeEnd && event.endDate >= rangeStart;
+  }
+
+  function parseRRule(rrule) {
+    if (!rrule) {
+      return null;
+    }
+
+    return rrule.split(";").reduce((acc, part) => {
+      const [key, value] = part.split("=");
+      if (key && value) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+  }
+
+  function startOfDay(date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  function addTimeOfDay(baseDay, sourceDate) {
+    return new Date(
+      baseDay.getFullYear(),
+      baseDay.getMonth(),
+      baseDay.getDate(),
+      sourceDate.getHours(),
+      sourceDate.getMinutes(),
+      sourceDate.getSeconds(),
+      sourceDate.getMilliseconds()
+    );
+  }
+
+  function dayDiff(a, b) {
+    const aStart = startOfDay(a).getTime();
+    const bStart = startOfDay(b).getTime();
+    return Math.round((bStart - aStart) / 86400000);
+  }
+
+  function weekDiff(a, b) {
+    return Math.floor(dayDiff(a, b) / 7);
+  }
+
+  function weekdayToIndex(day) {
+    return {
+      SU: 0,
+      MO: 1,
+      TU: 2,
+      WE: 3,
+      TH: 4,
+      FR: 5,
+      SA: 6
+    }[day];
+  }
+
+  function getRecurringInstances(event, rangeStart, rangeEnd, overrideKeys) {
+    const rule = parseRRule(event.rrule);
+    if (!rule) {
+      return overlapsRange(event, rangeStart, rangeEnd) ? [event] : [];
+    }
+
+    const interval = Number(rule.INTERVAL || "1");
+    const countLimit = Number(rule.COUNT || "0");
+    const untilDate = rule.UNTIL ? toKSTDate(rule.UNTIL, false) : null;
+    const byDays = (rule.BYDAY || "")
+      .split(",")
+      .filter(Boolean)
+      .map(weekdayToIndex)
+      .filter((value) => value !== undefined);
+    const duration = event.endDate.getTime() - event.startDate.getTime();
+    const instances = [];
+    let occurrenceCount = 0;
+
+    for (
+      let dayCursor = startOfDay(event.startDate);
+      dayCursor <= rangeEnd;
+      dayCursor.setDate(dayCursor.getDate() + 1)
+    ) {
+      const matchesDaily = rule.FREQ === "DAILY" && dayDiff(event.startDate, dayCursor) % interval === 0;
+      const weeklyDays = byDays.length > 0 ? byDays : [event.startDate.getDay()];
+      const matchesWeekly = (
+        rule.FREQ === "WEEKLY" &&
+        weekDiff(startOfDay(event.startDate), dayCursor) % interval === 0 &&
+        weeklyDays.includes(dayCursor.getDay())
+      );
+
+      if (!matchesDaily && !matchesWeekly) {
+        continue;
+      }
+
+      const occurrenceStart = addTimeOfDay(dayCursor, event.startDate);
+      const occurrenceEnd = new Date(occurrenceStart.getTime() + duration);
+
+      if (occurrenceStart < event.startDate) {
+        continue;
+      }
+
+      if (untilDate && occurrenceStart > untilDate) {
+        break;
+      }
+
+      occurrenceCount += 1;
+      if (countLimit && occurrenceCount > countLimit) {
+        break;
+      }
+
+      if (overrideKeys.has(String(occurrenceStart.getTime()))) {
+        continue;
+      }
+
+      if (occurrenceStart <= rangeEnd && occurrenceEnd >= rangeStart) {
+        instances.push({
+          ...event,
+          startDate: occurrenceStart,
+          endDate: occurrenceEnd
+        });
+      }
+    }
+
+    return instances;
+  }
+
+  function getRenderableEvents(events, rangeStart, rangeEnd) {
+    const overrideMap = new Map();
+
+    events.forEach((event) => {
+      if (!event.uid || !event.recurrenceIdDate) {
+        return;
+      }
+
+      if (!overrideMap.has(event.uid)) {
+        overrideMap.set(event.uid, new Set());
+      }
+
+      overrideMap.get(event.uid).add(String(event.recurrenceIdDate.getTime()));
+    });
+
+    const expandedEvents = [];
+
+    events.forEach((event) => {
+      if (event.recurrenceIdDate) {
+        if (overlapsRange(event, rangeStart, rangeEnd)) {
+          expandedEvents.push(event);
+        }
+        return;
+      }
+
+      if (event.rrule) {
+        expandedEvents.push(
+          ...getRecurringInstances(event, rangeStart, rangeEnd, overrideMap.get(event.uid) || new Set())
+        );
+        return;
+      }
+
+      if (overlapsRange(event, rangeStart, rangeEnd)) {
+        expandedEvents.push(event);
+      }
+    });
+
+    return expandedEvents;
+  }
+
   function ensureSelectedDateInMonth(date) {
     if (!selectedDate) {
       return;
@@ -168,7 +338,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const year = date.getFullYear();
     const month = date.getMonth();
-    const eventMap = getEventsByDateKey(calendarEvents);
 
     monthLabel.textContent = `${year}년 ${month + 1}월`;
     calendarGrid.innerHTML = "";
@@ -179,6 +348,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const lastOfMonth = new Date(year, month + 1, 0);
     const endOffset = 6 - lastOfMonth.getDay();
     const totalCells = startOffset + lastOfMonth.getDate() + endOffset;
+    const gridEndDate = new Date(year, month + 1, endOffset, 23, 59, 59, 999);
+    const visibleEvents = getRenderableEvents(calendarEvents, gridStartDate, gridEndDate);
+    const eventMap = getEventsByDateKey(visibleEvents);
 
     for (let index = 0; index < totalCells; index += 1) {
       const cellDate = new Date(gridStartDate);
@@ -231,7 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
       calendarGrid.appendChild(cell);
     }
 
-    renderAppointments(date, eventMap);
+    renderAppointments(date, eventMap, getRenderableEvents(calendarEvents, new Date(year, month, 1), new Date(year, month + 1, 0, 23, 59, 59, 999)));
   }
 
   function getEventsForMonth(events, monthDate) {
@@ -322,11 +494,11 @@ document.addEventListener("DOMContentLoaded", () => {
     ].join("; ");
   }
 
-  function renderAppointments(monthDate, eventMap) {
+  function renderAppointments(monthDate, eventMap, monthEvents) {
     const isFilteredByDate = Boolean(selectedDate);
     const events = isFilteredByDate
       ? (eventMap.get(toDateKey(selectedDate)) || [])
-      : getEventsForMonth(calendarEvents, monthDate);
+      : monthEvents;
 
     selectedDateLabel.textContent = isFilteredByDate
       ? formatSelectedSectionTitle(selectedDate)
